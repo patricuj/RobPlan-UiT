@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flåteoversikt</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <link href="https://use.fontawesome.com/releases/v5.0.13/css/all.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Roboto|Varela+Round" rel="stylesheet">
+    <style>
+        body {
+            color: #fff;
+            background-color: #121212;
+            font-family: 'Varela Round', sans-serif;
+        }
+        .container {
+            padding-top: 2rem;
+        }
+        .card {
+            background-color: #333;
+            margin-bottom: 1rem;
+        }
+        .card-header, .card-body {
+            color: #fff;
+        }
+        .nav-link {
+            color: #fff;
+            background-color: #333;
+            margin-bottom: 0.5rem;
+            border-radius: 0.25rem;
+        }
+        .nav-link.active {
+            background-color: #555;
+        }
+        .sidebar {
+            padding: 2rem 0;
+            height: 100vh;
+            overflow-y: auto;
+            background-color: #222;
+        }
+        .sidebar::-webkit-scrollbar {
+            width: 0.5rem;
+        }
+        .sidebar::-webkit-scrollbar-thumb {
+            background: #888;
+        }
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        .robot-card {
+            margin-bottom: 20px;
+        }
+        .robot-card img {
+            width: 100px;
+        }
+        .robot-card .card-body {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .robot-card .status {
+            margin-right: 15px;
+        }
+        .robot-card .progress {
+            width: 100px;
+        }
+        .btn-detail {
+            text-decoration: none;
+            color: #4dff4d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <nav class="col-md-2 d-none d-md-block sidebar">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.index') }}"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{{ url_for('main.robot_fleet') }}"><i class="fas fa-ship"></i> Flåteoversikt</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.missions') }}"><i class="fas fa-briefcase"></i> Oppdrag</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#"><i class="fas fa-history"></i> Historikk</a>
+                    </li>
+                    <li class="nav-item mt-auto">
+                        <a class="nav-link" href="#"><i class="fas fa-cog"></i> Innstillinger</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/"><i class="fas fa-sign-out-alt"></i> Logg Ut</a>
+                    </li>                                     
+                </ul>
+            </nav>
+            <main role="main" class="col-md-10 ml-sm-auto col-lg-10 px-4">
+                <div class="bell-icon" style="position: fixed; right: 0; top: 0; padding: 15px;">
+                    <i class="fas fa-bell" style="color: #fff; font-size: 1.5em;"></i>
+                </div>
+            </br>
+            </br>
+                <h2>Flåteoversikt</h2>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card robot-card">
+                            <div class="card-body">
+                                <img src="robot_image_placeholder.png" alt="Robot Image">
+                                <div>
+                                    <h5>Robot 1</h5>
+                                    <p class="status">Batteri: 96%<br>Status: Lader<br>Planlagt for i dag kl 11:00</p>
+                                    <a href="#" class="btn-detail">Detaljer →</a>
+                                </div>
+                                <div class="progress">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card robot-card">
+                            <div class="card-body">
+                                <img src="robot_image_placeholder.png" alt="Robot Image">
+                                <div>
+                                    <h5>Robot 2</h5>
+                                    <p class="status">Batteri: 90%<br>Status: Lader<br>Planlagt for i dag kl 11:00</p>
+                                    <a href="#" class="btn-detail">Detaljer →</a>
+                                </div>
+                                <div class="progress">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card robot-card">
+                            <div class="card-body">
+                                <img src="robot_image_placeholder.png" alt="Robot Image">
+                                <div>
+                                    <h5>Robot 3</h5>
+                                    <p class="status">Batteri: 96%<br>Status: Lader<br>Ingen plan</p>
+                                    <a href="#" class="btn-detail">Detaljer →</a>
+                                </div>
+                                <div class="progress">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card robot-card">
+                            <div class="card-body">
+                                <img src="robot_image_placeholder.png" alt="Robot Image">
+                                <div>
+                                    <h5>Robot 4</h5>
+                                    <p class="status">Batteri: 96%<br>Status: Lader<br>Ingen plan</p>
+                                    <a href="#" class="btn-detail">Detaljer →</a>
+                                </div>
+                                <div class="progress">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card robot-card">
+                            <div class="card-body">
+                                <img src="robot_image_placeholder.png" alt="Robot Image">
+                                <div>
+                                    <h5>Robot 5</h5>
+                                    <p class="status">Batteri: 96%<br>Status: Lader<br>Ingen plan</p>
+                                    <a href="#" class="btn-detail">Detaljer →</a>
+                                </div>
+                                <div class="progress">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card robot-card">
+                            <div class="card-body">
+                                <img src="robot_image_placeholder.png" alt="Robot Image">
+                                <div>
+                                    <h5>Robot 6</h5>
+                                    <p class="status">Batteri: 96%<br>Status: Lader<br>Planlagt for i morgen</p>
+                                    <a href="#" class="btn-detail">Detaljer →</a>
+                                </div>
+                                <div class="progress">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>            
+            </main>
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+</body>
+</html>

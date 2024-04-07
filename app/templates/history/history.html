@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}Historikk{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <nav class="col-md-2 d-none d-md-block sidebar">
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('main.index') }}"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('robot_fleet.robot_fleet') }}"><i class="fas fa-ship"></i> Flåteoversikt</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('missions.missions') }}"><i class="fas fa-briefcase"></i> Oppdrag</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="#"><i class="fas fa-history"></i> Historikk</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#"><i class="fas fa-bell"></i> Notifikasjoner</a>
+                </li>
+                <li class="nav-item mt-auto">
+                    <a class="nav-link" href="#"><i class="fas fa-cog"></i> Innstillinger</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/"><i class="fas fa-sign-out-alt"></i> Logg Ut</a>
+                </li>
+            </ul>
+        </nav>
+        <main role="main" class="col-md-10 ml-sm-auto col-lg-10 px-4">
+            <br><br>
+            <h2>Historikk</h2>
+            <div class="table-responsive">
+    </table>   <table class="table table-dark">
+        <thead>
+            <tr>
+                <th>Status</th>
+                <th>Oppdrag</th>
+                <th>Robot</th>
+                <th>Tid fullført</th>
+                <th>Resultat ID</th>
+                <th>Rapport</th>
+            </tr>
+        </thead>
+        <div class="history-controls">
+            <div class="sorting-links">
+                <a href="{{ url_for('history.history', page=page, sort='asc', robot_name=selected_robot) }}" class="{{ 'active-sort' if sort_order == 'asc' else '' }}">Eldste først</a> |
+                <a href="{{ url_for('history.history', page=page, sort='desc', robot_name=selected_robot) }}" class="{{ 'active-sort' if sort_order == 'desc' else '' }}">Nyeste først</a>
+            </div>
+            <div class="filter-menu">
+                <form action="{{ url_for('history.history') }}" method="get">
+                    <label for="from-date">Fra dato:</label>
+                    <input type="date" id="from-date" name="from_date" value="{{ from_date }}" pattern="\d{1,2}/\d{1,2}/\d{4}">
+                
+                    <label for="to-date">Til dato:</label>
+                    <input type="date" id="to-date" name="to_date" value="{{ to_date }}" pattern="\d{1,2}/\d{1,2}/\d{4}">
+                    <input type="hidden" name="sort" value="{{ sort_order }}">
+                    <input type="submit" value="Filtrer">
+                    <a href="{{ url_for('history.history', robot_name=selected_robot, sort=sort_order) }}" class="btn btn-warning">Fjern dato</a>
+
+                    <label for="robot-select">Velg robot:</label>
+                    <select name="robot_name" id="robot-select" onchange="this.form.submit()">
+                        <option value="" {{ 'selected' if selected_robot == '' }}>Alle roboter</option>
+                        <option value="Placebot" {{ 'selected' if selected_robot == 'Placebot' }}>Placebot</option>
+                        <option value="Placebot2" {{ 'selected' if selected_robot == 'Placebot2' }}>Placebot2</option>
+                        <option value="Placebot3" {{ 'selected' if selected_robot == 'Placebot3' }}>Placebot3</option>
+                    </select>
+                </form>
+            </div>
+        </div>
+        <tbody id="history-content">
+            {% for item in inspection_data %}
+            <tr>
+                <td style="color: green;">Fullført</td>
+                <td>{{ item.mission_name }}</td>
+                <td>{{ item.robot_name }}</td>
+                <td>{{ item.date }} kl. {{ item.time }}</td>
+                <td>{{ item.result_id }}</td>
+                <td><a href="{{ url_for('report.show_report', result_id=item.result_id) }}" target="_blank">Vis Rapport</a></td>
+            </tr>            
+            {% else %}
+            <tr><td colspan="8">Ingen historiske data tilgjengelige.</td></tr>
+            {% endfor %}
+        </tbody>        
+    </table>
+            </div>
+            <div id="no-data" class="alert alert-warning" style="display: none;">
+                Ingen historiske data tilgjengelige.
+            </div>
+            <nav aria-label="Paginering">
+                <ul class="pagination">
+                    {% if page > 1 %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('history.history', page=page-1, robot_name=selected_robot, sort=sort_order, from_date=from_date, to_date=to_date) }}">Forrige</a>
+                    </li>
+                    {% endif %}
+                    
+                    {% for i in range(1, max_page+1) %}
+                    <li class="page-item {{ 'active' if i == page else '' }}">
+                        <a class="page-link" href="{{ url_for('history.history', page=i, robot_name=selected_robot, sort=sort_order, from_date=from_date, to_date=to_date) }}">{{ i }}</a>
+                    </li>
+                    {% endfor %}
+                    
+                    {% if page < max_page %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('history.history', page=page+1, robot_name=selected_robot, sort=sort_order, from_date=from_date, to_date=to_date) }}">Neste</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        
+{% endblock %}

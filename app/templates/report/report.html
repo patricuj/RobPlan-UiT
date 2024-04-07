@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+
+{% block title %}Rapport for {{ report_data.mission_name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <div class="card-header">
+            <h2>Rapport for oppdrag: {{ report_data.mission_name }}</h2>
+            <h6 class="text-muted">ID: {{ result_id }}</h6>
+        </div>
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h4>OPPDRAGSDETALJER</h4>
+                    <p><strong>Operatør:</strong> Dennis Mai</p>
+                    <p><strong>Robot:</strong> {{ report_data.robot_name }}</p>
+                    <p><strong>ISAR ID:</strong> {{ report_data.isar_id }}</p>
+                    <p><strong>Plant Code:</strong> {{ report_data.plant_code }}</p>
+                    <p><strong>Plant Name:</strong> {{ report_data.plant_name }}</p>
+                    <p><strong>Oppdrags ID:</strong> {{ report_data.mission_id }}</p>
+                    <p><strong>Start tid:</strong> {{ report_data.start_time }}</p>
+                    <p><strong>Tid fullført:</strong> {{ report_data.timestamp }}</p>
+                    <p><strong>Varighet:</strong> {{ report_data.duration }}</p>
+                    <p><strong>Kjørt distanse:</strong> 500 m</p>
+                </div>
+                <div class="col-md-6">
+                    <h4>KART</h4>
+                    <div id="map-container" style="height: 200px; position: relative;">
+                        <img src="{{ url_for('static', filename='Facility_map.png') }}" id="facility-map" alt="Kart" style="width: 100%; max-width: 842px; height: auto; cursor: pointer;">
+                        <img src="{{ url_for('static', filename='robot.png') }}" id="robot" alt="Robot" style="width: 50px; height: auto; position: absolute; display: none;">
+                        <button id="startAnimationBtn" class="btn btn-primary" style="position: absolute; bottom: -370px; right: 200px;">Start animasjon</button>
+                    </div>
+                </div>
+                <div class="col-md-16">
+                    <h4>MEDIA</h4>
+                    <div class="media-list">
+                        <div class="media-item" data-toggle="modal" data-target="#electricBoxModal">
+                            <img src="{{ url_for('static', filename='electric_box.jpg') }}" alt="Elektrisk Boks" style="cursor: pointer;">
+                            <div>Bilde av elektrisk boks ({{ report_data.electric_box_time }})</div>
+                        </div>
+                        <br>
+                        <div id="audioPlayerContainer" style="margin-top: 15px;">
+                            <audio id="exampleAudio" src="{{ url_for('static', filename='example_audio.wav') }}" controls></audio>
+                            <div>Lydopptak av svitsj ({{ report_data.switch_audio_time }})</div>
+                        </div>
+                        <br>
+                        <div class="media-item" data-toggle="modal" data-target="#imageModal">
+                            <img src="{{ url_for('static', filename='valve.jpg') }}" alt="Rapportbilde" style="cursor: pointer;">
+                            <div>Bilde av valve ({{ report_data.valve_image_time }})</div>
+                        </div>                        
+                    <div class="modal fade" id="electricBoxModal" tabindex="-1" role="dialog" aria-labelledby="electricBoxModalLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-lg" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="electricBoxModalLabel">Elektrisk boks i full størrelse</h5>
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Lukk">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                                <div class="modal-body">
+                                    <img src="{{ url_for('static', filename='electric_box.jpg') }}" alt="Elektrisk Boks" style="width: 100%;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal fade" id="imageModal" tabindex="-1" role="dialog" aria-labelledby="imageModalLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-lg" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="imageModalLabel">Valve i full størrelse</h5>
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Lukk">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                                <div class="modal-body"> 
+                                    <img src="{{ url_for('static', filename='valve.jpg') }}" alt="Rapportbilde" style="width: 100%;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <a href="{{ url_for('history.history') }}" class="btn btn-secondary mt-4">Tilbake</a>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var mapContainer = document.getElementById('map-container');
+        var electricBoxImage = document.querySelector('div.media-item[data-target="#electricBoxModal"] img');
+        var valveImage = document.querySelector('div.media-item[data-target="#imageModal"] img');
+        var audioPlayer = document.getElementById('exampleAudio');
+        var robot = document.getElementById('robot');
+    
+        var markers = [
+            {id: 1, x: 358, y: 260, name: '1. El.boks'},
+            {id: 2, x: 247, y: 153, name: '2. Svitsj'},
+            {id: 3, x: 140, y: 257, name: '3. Valve'}
+        ];
+    
+        var route = [{x: 300, y: 400}, {x: 370, y: 260}, {x: 180, y: 140}, {x: 80, y: 260}, {x: 300, y: 400}];
+        var currentPoint = 0;
+    
+        function moveRobot() {
+            if (currentPoint < route.length) {
+                robot.style.left = route[currentPoint].x + 'px';
+                robot.style.top = route[currentPoint].y + 'px';
+                robot.style.display = 'block';
+                currentPoint++;
+                setTimeout(moveRobot, 1000);
+            } else {
+                robot.style.display = 'none';
+                currentPoint = 0;
+            }
+        }
+
+        function startAnimation() {
+            stopAndHideAudio();
+            removeImageHighlights();
+            moveRobot();
+        }
+    
+        function playAudio() {
+            audioPlayer.style.display = 'block';
+            audioPlayer.play();
+        }
+    
+        function stopAndHideAudio() {
+            audioPlayer.pause();
+            audioPlayer.currentTime = 0;
+        }
+    
+        function removeImageHighlights() {
+            [electricBoxImage, valveImage].forEach(image => {
+                image.classList.remove('highlighted-img', 'blinking');
+            });
+            audioPlayer.classList.remove('highlighted-img', 'blinking');
+            markers.forEach(function(marker) {
+                document.querySelector(`.marker[data-id="${marker.id}"]`).classList.remove('marker-highlighted', 'blinking');
+            });
+        }
+    
+        markers.forEach(function(marker) {
+            var el = document.createElement('div');
+            el.className = 'marker';
+            el.style.left = marker.x + 'px';
+            el.style.top = marker.y + 'px';
+            el.setAttribute('data-id', marker.id.toString());
+    
+            var markerName = document.createElement('span');
+            markerName.className = 'marker-text';
+            markerName.textContent = marker.name;
+            markerName.style.cssText = `
+                position: absolute;
+                left: 50%;
+                top: -50px;
+                transform: translateX(-50%);
+                color: #fff;
+                font-size: 12px;
+                background-color: rgba(0,0,0,0.5);
+                padding: 2px 5px;
+                border-radius: 5px;
+            `;
+    
+            el.appendChild(markerName);
+            mapContainer.appendChild(el);
+    
+            el.addEventListener('click', function() {
+                removeImageHighlights();
+                stopAndHideAudio();
+                if (marker.id === 1) {
+                    electricBoxImage.classList.add('highlighted-img', 'blinking');
+                } else if (marker.id === 2) {
+                    playAudio();
+                    audioPlayer.classList.add('highlighted-img', 'blinking');
+                } else if (marker.id === 3) {
+                    valveImage.classList.add('highlighted-img', 'blinking');
+                }
+                el.classList.add('marker-highlighted', 'blinking');
+            });
+        });
+    
+        document.getElementById('facility-map').addEventListener('click', function(event) {
+            if (!event.target.classList.contains('marker') && event.target.id === 'facility-map') {
+                removeImageHighlights();
+                stopAndHideAudio();
+            }
+        });
+    
+        document.getElementById('startAnimationBtn').addEventListener('click', function() {
+            startAnimation();
+        });
+    });
+</script>
+{% endblock %}

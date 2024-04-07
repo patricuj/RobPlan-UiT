@@ -1,8 +1,10 @@
-from flask import Blueprint, render_template, request, jsonify, redirect, url_for
+from flask import render_template, request, jsonify
 import requests
 from . import missions_bp
 
-
+@missions_bp.route('/missions')
+def missions():
+    return render_template('/missions/missions.html')
 
 @missions_bp.route('/start-mission', methods=['POST'])
 def start_mission():
@@ -61,3 +63,38 @@ def transform_mission_data(default_mission_data):
             "frame_name": "robot"
         }
     }
+
+
+
+
+@missions_bp.route('/schedule/stop-mission', methods=['POST'])
+def stop_mission():
+    isar_api_url = 'http://localhost:3000/schedule/stop-mission'
+    response = requests.post(isar_api_url)
+
+    if response.status_code == 200:
+        return jsonify({"message": "Oppdrag vellykket stoppet"}), 200
+    else:
+        return jsonify({"error": "Kunne ikke stoppe oppdraget", "details": response.text}), response.status_code
+
+@missions_bp.route('/schedule/pause-mission', methods=['POST'])
+def pause_mission():
+    isar_api_url = 'http://localhost:3000/schedule/pause-mission'
+    response = requests.post(isar_api_url)
+    
+    if response.status_code == 200:
+        return jsonify({"message": "Oppdrag er pauset"})
+    else:
+        return jsonify({"error": "Kunne ikke pause oppdraget",
+                        "details": response.text}), response.status_code
+
+
+@missions_bp.route('/schedule/resume-mission', methods=['POST'])
+def resume_mission():
+    isar_api_url = 'http://localhost:3000/schedule/resume-mission'
+    response = requests.post(isar_api_url)
+    
+    if response.status_code == 200:
+        return jsonify({"message": "Oppdrag er gjenopptatt"}), 200
+    else:
+        return jsonify({"error": "Kunne ikke gjenoppta oppdraget", "details": response.text}), response.status_code

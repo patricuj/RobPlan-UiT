@@ -1,69 +1,8 @@
+{% extends "base.html" %}
+{% block content %}
 <!DOCTYPE html>
 <html lang="no">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Oppdrag</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
-    <link href="https://use.fontawesome.com/releases/v5.0.13/css/all.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css?family=Roboto|Varela+Round" rel="stylesheet">
-    <style>
-        body {
-            color: #fff;
-            background-color: #121212;
-            font-family: 'Varela Round', sans-serif;
-        }
-        .container {
-            padding-top: 2rem;
-        }
-        .card {
-            background-color: #222;
-            margin-bottom: 1rem;
-        }
-        .card-header, .card-body {
-            color: #fff;
-        }
-        .btn-secondary {
-            background-color: #555;
-            border: none;
-        }
-        .nav-link {
-            color: #fff;
-            background-color: #333;
-            margin-bottom: 0.5rem;
-            border-radius: 0.25rem;
-        }
-        .nav-link.active {
-            background-color: #555;
-        }
-        .sidebar {
-            padding: 2rem 0;
-            height: 100vh;
-            overflow-y: auto;
-            background-color: #222;
-        }
-        .sidebar::-webkit-scrollbar {
-            width: 0.5rem;
-        }
-        .sidebar::-webkit-scrollbar-thumb {
-            background: #888;
-        }
-        .sidebar::-webkit-scrollbar-thumb:hover {
-            background: #555;
-        }
-        .bell-icon {
-            position: fixed;
-            right: 0;
-            top: 0;
-            padding: 15px;
-            z-index: 1030;
-        }
-        .fas.fa-bell {
-            color: #fff;
-            font-size: 1.5em;
-        }
-    </style>
-</head>
 <body>
     <div class="container-fluid">
         <div class="row">
@@ -73,13 +12,16 @@
                         <a class="nav-link" href="{{ url_for('main.index') }}"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('main.robot_fleet') }}"><i class="fas fa-ship"></i> Flåteoversikt</a>
+                        <a class="nav-link" href="{{ url_for('robot_fleet.robot_fleet') }}"><i class="fas fa-ship"></i> Flåteoversikt</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link active" href="{{ url_for('main.missions') }}"><i class="fas fa-briefcase"></i> Oppdrag</a>
+                        <a class="nav-link active" href="#"><i class="fas fa-briefcase"></i> Oppdrag</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#"><i class="fas fa-history"></i> Historikk</a>
+                        <a class="nav-link" href="{{ url_for('history.history') }}"><i class="fas fa-history"></i> Historikk</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#"><i class="fas fa-bell"></i> Notifikasjoner</a>
                     </li>
                     <li class="nav-item mt-auto">
                         <a class="nav-link" href="#"><i class="fas fa-cog"></i> Innstillinger</a>
@@ -90,9 +32,6 @@
                 </ul>
             </nav>
             <main role="main" class="col-md-10 ml-sm-auto col-lg-10 px-4">
-                <div class="bell-icon" style="position: fixed; right: 0; top: 0; padding: 15px;">
-                    <i class="fas fa-bell" style="color: #fff; font-size: 1.5em;"></i>
-                </div>
             </br>
             </br>
                 <h2>Oppdrag</h2>
@@ -201,11 +140,11 @@
                                 return response.json();
                             })
                             .then(data => {
-                                alert('Mission started successfully: ' + JSON.stringify(data));
+                                alert('Oppdrag har startet');
                             })
                             .catch((error) => {
                                 console.error('Error starting mission:', error);
-                                alert('Error starting mission: ' + error.message);
+                                alert('Feil ved start av oppdrag: ' + error.message);
                             });
                         }
 
@@ -228,3 +167,4 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
 </body>
 </html>
+{% endblock %}

@@ -1,0 +1,299 @@
+{% extends "base.html" %}
+{% block content %}
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<div id="loadingSpinner" class="d-none text-center">
+    <div class="spinner-border text-light" role="status">
+        <span class="sr-only">Replanlegger ...</span>
+    </div>
+    <p class="text-light mt-2">Replanlegger ...</p>
+</div>
+<div class="modal fade" id="replanModal" tabindex="-1" role="dialog" aria-labelledby="replanModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl" role="document">
+      <div class="modal-content" style="background-color: #333; color: #fff;">
+        <div class="modal-header">
+          <h5 class="modal-title" id="replanModalLabel">Replanlegg Oppdrag</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Lukk">
+            <span aria-hidden="true" style="color: #aaa;">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <div class="col-md-6">
+              <h6>Oppdrags-ID: 12345 Oppdragsnavn: Maintenance level 1</h6>
+              <p>Status: Nåværende oppdrag</p>
+              <ul>
+                <li>DriveToPose Electrisk boks</li>
+                <li>TakeImage of Elekstrisk boks</li>
+                <li>DriveToPose Svitsj</li>
+                <li>TakeImage of Svitsj</li>
+                <li>DriveToPose Valve 1</li>
+                <li>ListenTo Valve 1</li>
+                <li>DriveToPose Base</li>
+                <img src="{{ url_for('static', filename='current_mission.jpg') }}" alt="Nåværende Oppdrag" class="img-fluid mb-3">
+              </ul>
+            </div>
+            <div class="col-md-6">
+              <h6>Forslag til Replanlagt Oppdrag</h6>
+              <p>Status: Venter på gjennomgang</p>
+              <ul>
+                <li>DriveToPose Valve 1</li>
+                <li>ListenTo Valve 1</li>
+                <li>DriveToPose Electrisk boks</li>
+                <li>TakeImage of Elekstrisk boks</li>
+                <li>DriveToPose Svitsj</li>
+                <li>TakeImage of Svitsj</li>
+                <li>DriveToPose Base</li>
+                <img src="{{ url_for('static', filename='replan_mission.jpg') }}" alt="Replanlagt Oppdrag" class="img-fluid mb-3">
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-success" id="acceptNewPlan">Aksepter ny plan</button>
+          <button type="button" class="btn btn-danger" data-dismiss="modal">Avbryt</button>
+        </div>
+      </div>
+    </div>
+  </div>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <nav class="col-md-2 d-none d-md-block sidebar">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.index') }}"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{{ url_for('robot_fleet.robot_fleet') }}"><i class="fas fa-ship"></i> Flåteoversikt</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('missions.missions') }}"><i class="fas fa-briefcase"></i> Oppdrag</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('history.history') }}"><i class="fas fa-history"></i> Historikk</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#"><i class="fas fa-bell"></i> Notifikasjoner</a>
+                    </li>
+                    <li class="nav-item mt-auto">
+                        <a class="nav-link" href="#"><i class="fas fa-cog"></i> Innstillinger</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/"><i class="fas fa-sign-out-alt"></i> Logg Ut</a>
+                    </li>                                     
+                </ul>
+            </nav>
+            <main role="main" class="col-md-10 ml-sm-auto col-lg-10 px-4">
+                <br><br>
+                <h2 id="robot-name-header">Robotstatus</h2>
+                <div class="row" id="robot-container">
+                </div>
+                <div class="control-buttons">
+                    <button class="btn btn-primary control-button" id="resume">Fortsett oppdrag</button>
+                    <button class="btn btn-primary control-button" id="pause">Pause oppdrag</button>
+                    <button class="btn btn-danger control-button" id="stop">STOPP oppdrag</button>
+                    <button class="btn btn-secondary control-button" id="replan">Replanlegg oppdrag</button>
+                </div>
+            </main>
+        </div>
+    </div>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const isarId = "{{ isar_id }}";
+            const robotIds = ["00000000-0000-0000-0000-000000000000"];
+
+            
+            // WebSocket-serveren
+            var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
+
+            socket.on('update_robot_heartbeat', function(msg) {
+                if(msg.isar_id === isarId) {
+                    const data = JSON.parse(msg.data);
+                    const isarId = msg.isar_id;
+                    localStorage.setItem(`robot_heartbeat_${isarId}`, JSON.stringify(data));
+                    updateOrCreateRobotCard(isarId, 'heartbeat', data);
+                }
+            });
+
+
+            socket.on('update_robot_status', function(msg) {
+                if(msg.isar_id === isarId) {
+                    const data = JSON.parse(msg.data);
+                    const isarId = msg.isar_id;
+                    localStorage.setItem(`robot_status_${isarId}`, JSON.stringify(data));
+                    updateOrCreateRobotCard(isarId, 'status', data);
+                }
+            });
+    
+            socket.on('update_battery', function(msg) {
+                if(msg.isar_id === isarId) {
+                    const data = JSON.parse(msg.data);
+                    const isarId = msg.isar_id;
+                    localStorage.setItem(`robot_battery_${isarId}`, JSON.stringify(data));
+                    updateOrCreateRobotCard(isarId, 'battery', data);
+                }
+            });
+
+            socket.on('update_mission', function(msg) {
+                if(msg.isar_id === isarId) {
+                    const data = JSON.parse(msg.data);
+                    const isarId = msg.isar_id;
+                    updateOrCreateRobotCard(isarId, 'mission', data);
+                }
+            });
+    
+            function updateOrCreateRobotCard(isarId, infoType, data) {
+                let robotCard = document.getElementById(`robot_card_${isarId}`);
+                if (!robotCard) {
+                    robotCard = createRobotCard(isarId, data.robot_name || 'Ukjent');
+                }
+
+                if (infoType === 'status' || infoType === 'battery' || infoType === 'mission') {
+                    const statusElement = robotCard.querySelector('.status');
+                    statusElement.textContent = `Status: ${data.robot_status || data.status || 'tilgjengelig'}`;
+
+                    const taskElement = robotCard.querySelector('.task');
+                    taskElement.textContent = `Gjeldende oppgave: ${data.current_mission_id || data.mission_id || 'Ingen oppdrag'}`;
+
+                    if (infoType === 'battery') {
+                        const batteryElement = robotCard.querySelector('.progress-bar');
+                        batteryElement.style.width = `${data.battery_level}%`;
+                        batteryElement.textContent = `${data.battery_level}% Batteri`;
+                    }
+
+                    if (infoType === 'mission') {
+                        const missionStatusElement = robotCard.querySelector('.mission-status');
+                        missionStatusElement.textContent = `Oppdragsstatus: ${data.status || 'Ukjent'} - Sist oppdatert: ${new Date(data.timestamp).toLocaleString()}`;
+                    }
+                }
+            }
+
+    
+            function createRobotCard(isarId, robotName) {
+                const container = document.getElementById('robot-container');
+                const cardHtml = `
+                    <div class="col-md-4">
+                        <div class="card robot-card" id="robot_card_${isarId}">
+                            <div class="card-body">
+                                <h5 class="robot-name">${robotName}</h5>
+                                <p class="status">Status: Ukjent</p>
+                                <p class="task">Gjeldende oppgave: Ingen</p>
+                                <p class="mission-status">Oppdragsstatus: Ukjent - Sist oppdatert: Ikke tilgjengelig</p>
+                                <div class="progress">
+                                    <div class="progress-bar" style="width: 0%; height: 100%">0% Batteri</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+                container.innerHTML += cardHtml;
+                return document.getElementById(`robot_card_${isarId}`);
+            }
+
+    
+            robotIds.forEach(isarId => {
+                const robotStatusData = localStorage.getItem(`robot_status_${isarId}`);
+                const robotBatteryData = localStorage.getItem(`robot_battery_${isarId}`);
+                if (robotStatusData) {
+                    updateOrCreateRobotCard(isarId, 'status', JSON.parse(robotStatusData));
+                }
+                if (robotBatteryData) {
+                    updateOrCreateRobotCard(isarId, 'battery', JSON.parse(robotBatteryData));
+                }
+            });
+
+            document.getElementById('stop').addEventListener('click', function() {
+                fetch('/schedule/stop-mission', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        console.log('Oppdrag stoppet vellykket.');
+                    } else {
+                        console.error('Det oppsto en feil ved forsøk på å stoppe oppdraget.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Nettverksfeil:', error);
+                });
+            });
+            document.getElementById('pause').addEventListener('click', function() {
+                fetch('/schedule/pause-mission', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(handleResponse)
+                .catch(handleError);
+            });
+
+            document.getElementById('resume').addEventListener('click', function() {
+                fetch('/schedule/resume-mission', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(handleResponse)
+                .catch(handleError);
+            });
+
+            function handleResponse(response) {
+            response.json().then(data => {
+                if (response.ok) {
+                    console.log('Handling vellykket.');
+                    alert(data.message);
+                } else {
+                    console.error('Det oppsto en feil.');
+                    alert(data.error || 'Det oppsto en feil.');
+                }
+    });
+}
+
+function handleError(error) {
+    console.error('Nettverksfeil:', error);
+    alert('Nettverksfeil: Kunne ikke kommunisere med serveren.');
+}
+
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.getElementById('replan').addEventListener('click', function() {
+                document.getElementById('loadingSpinner').classList.remove('d-none');
+        
+                setTimeout(function() {
+                    $('#replanModal').modal('show');
+                    document.getElementById('loadingSpinner').classList.add('d-none');
+                }, 2000);
+            });
+        
+            document.getElementById('acceptNewPlan').addEventListener('click', function() {
+                $('#replanModal').modal('hide'); 
+                document.getElementById('loadingSpinner').innerHTML = `
+                    <div class="alert alert-success" role="alert">
+                        Ny plan satt i gang!
+                    </div>
+                `;
+                document.getElementById('loadingSpinner').classList.remove('d-none');
+                setTimeout(function() {
+                    document.getElementById('loadingSpinner').classList.add('d-none');
+                }, 4000);
+            });
+        });
+        </script>
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+</body>
+</html>
+{% endblock %}

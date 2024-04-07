@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Tittel{% endblock %}</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <link href="https://use.fontawesome.com/releases/v5.0.13/css/all.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Roboto|Varela+Round" rel="stylesheet">
+    <style>
+        body {
+            color: #fff;
+            background-color: #121212;
+            font-family: 'Varela Round', sans-serif;
+        }
+        .container {
+            padding-top: 2rem;
+        }
+        .sidebar {
+            padding: 2rem 0;
+            height: 100vh;
+            overflow-y: auto;
+            background-color: #222;
+        }
+        .nav-link {
+            color: #fff;
+            background-color: #333;
+            margin-bottom: 0.5rem;
+            border-radius: 0.25rem;
+            padding: 40px 50px;
+        }
+        .nav-item:last-child {
+            margin-top: auto;
+        }
+        .nav-link.active {
+            background-color: #555;
+        }
+        .oppdrag-liste {
+            display: flex;
+            flex-direction: column;
+        }
+        .oppdrag {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .oppdrag-kolonne {
+            flex-basis: 33%;
+            display: flex;
+            align-items: center;
+        }
+        .card {
+            background-color: #222;
+            margin-bottom: 1rem;
+        }
+        .card-header, .card-body {
+            color: #fff;
+        }
+        .card-title {
+            color: #4dff4d;
+        }
+        .card-text {
+            margin-left: 1rem;
+        }
+        .btn-secondary {
+            background-color: #555;
+            border: none;
+        }
+        .sidebar::-webkit-scrollbar {
+            width: 0.5rem;
+        }
+        .sidebar::-webkit-scrollbar-thumb {
+            background: #888;
+        }
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        .robot-card {
+            margin-bottom: 40px;
+        }
+        .robot-card img {
+            width: 150px;
+            height: auto;
+        }
+        .robot-card .card-body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .robot-card .status, .robot-card .mission {
+            margin-top: 10px;
+            font-size: 1.2rem;
+        }
+        .robot-card .progress {
+            width: 80%;
+            height: 30px;
+        }
+        .robot-card .progress-bar {
+            font-size: 1.2rem;
+        }
+        .robot-card .btn-detail {
+            margin-top: 10px;
+            text-decoration: none;
+            color: #4dff4d;
+        }
+        .modal-content {
+            background-color: #333;
+            color: #fff;
+        }
+        .modal-header, .modal-body, .modal-footer {
+            border-color: #444;
+        }
+        .close {
+            color: #fff;
+        }
+        .close:hover {
+            color: #999;
+        }
+        @media (min-width: 992px) {
+            .modal-lg, .modal-xl {
+                max-width: 90%;
+            }
+        }
+        .media-item img {
+            width: 100%;
+            max-width: 200px;
+            height: auto;
+            cursor: pointer;
+        }
+        .marker {
+            position: absolute;
+            z-index: 10;
+            background-color: #ff7301;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            transform: translate(-50%, -50%);
+            border: 2px solid transparent;
+            border-radius: 50%;
+        }
+        .marker-highlighted {
+            border-color: #4dff4d;
+            animation: blink 1s infinite;
+        }
+        .highlighted-img {
+            border: 5px solid #4dff4d;
+            opacity: 0.8;
+        }
+        @keyframes blink {
+            0% { border-color: #4dff4d; opacity: 1; }
+            50% { border-color: #4dff4d; opacity: 0.5; }
+            100% { border-color: #4dff4d; opacity: 1; }
+        }
+
+        .blinking {
+            animation: blink 1s infinite;
+        }
+        .history-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .sorting-links a {
+            margin-right: 15px;
+        }
+        .active-sort {
+            background-color: #007bff;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            text-decoration: none;
+        }
+
+
+
+    </style>
+</head>
+<body>
+    {% block content %}
+    <h1>Default Content</h1>
+    {% endblock %}
+
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <script src="{{ url_for('static', filename='socketio_setup.js') }}"></script>
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+</body>
+</html>

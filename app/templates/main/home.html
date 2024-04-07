@@ -1,99 +1,8 @@
+{% extends "base.html" %}
+{% block content %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="no">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
-    <link href="https://use.fontawesome.com/releases/v5.0.13/css/all.css" rel="stylesheet">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css?family=Roboto|Varela+Round" rel="stylesheet">
-    <style>
-        body {
-            color: #fff;
-            background-color: #121212;
-            font-family: 'Varela Round', sans-serif;
-        }
-        .container {
-            padding-top: 2rem;
-        }
-        .card {
-            background-color: #222;
-            margin-bottom: 1rem;
-        }
-        .card-header, .card-body {
-            color: #fff;
-        }
-        .card-title {
-            color: #4dff4d;
-        }
-        .card-text {
-            margin-left: 1rem;
-        }
-        .btn-secondary {
-            background-color: #555;
-            border: none;
-        }
-        .nav-link {
-            color: #fff;
-            background-color: #333;
-            margin-bottom: 0.5rem;
-            border-radius: 0.25rem;
-        }
-        .nav-link.active {
-            background-color: #555;
-        }
-        .sidebar {
-            padding: 2rem 0;
-            height: 100vh;
-            overflow-y: auto;
-            background-color: #222;
-        }
-        .sidebar::-webkit-scrollbar {
-            width: 0.5rem;
-        }
-        .sidebar::-webkit-scrollbar-thumb {
-            background: #888;
-        }
-        .sidebar::-webkit-scrollbar-thumb:hover {
-            background: #555;
-        }
-        .bell-icon {
-            position: fixed;
-            right: 0;
-            top: 0;
-            padding: 15px;
-            z-index: 1030;
-        }
-
-        .fas.fa-bell {
-            color: #fff;
-            font-size: 1.5em;
-        }
-        .oppdrag-liste {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .oppdrag {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
-        }
-
-        .oppdrag-kolonne {
-            flex-basis: 33%;
-            display: flex;
-            align-items: center;
-        }
-
-        .fas.fa-robot {
-            margin-right: 5px;
-        }
-
-
-    </style> 
-</head>
 <body>
     <div class="container-fluid">
         <div class="row">
@@ -103,15 +12,18 @@
                         <a class="nav-link active" href="#"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('main.robot_fleet') }}"><i class="fas fa-ship"></i> Flåteoversikt</a>
+                        <a class="nav-link" href="{{ url_for('robot_fleet.robot_fleet') }}"><i class="fas fa-ship"></i> Flåteoversikt</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('main.missions') }}"><i class="fas fa-briefcase"></i> Oppdrag</a>
+                        <a class="nav-link" href="{{ url_for('missions.missions') }}"><i class="fas fa-briefcase"></i> Oppdrag</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#"><i class="fas fa-history"></i> Historikk</a>
+                        <a class="nav-link" href="{{ url_for('history.history') }}"><i class="fas fa-history"></i> Historikk</a>
                     </li>
-                    <li class="nav-item mt-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#"><i class="fas fa-bell"></i> Notifikasjoner</a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="#"><i class="fas fa-cog"></i> Innstillinger</a>
                     </li>
                     <li class="nav-item">
@@ -120,11 +32,7 @@
                 </ul>
             </nav>
             <main role="main" class="col-md-10 ml-sm-auto col-lg-10 px-4">
-                <div class="bell-icon" style="position: fixed; right: 0; top: 0; padding: 15px;">
-                    <i class="fas fa-bell" style="color: #fff; font-size: 1.5em;"></i>
-                </div>
-            </br>
-            </br>
+                <br><br>
                 <h1>God morgen, Alise</h1>
                 <div class="row">
                     <div class="col-md-6">
@@ -153,42 +61,100 @@
                                 </div>
                                 <a href="#" class="btn btn-secondary">Se alle oppdrag</a>
                             </div>
-                            
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="card">
                             <div class="card-header">
-                                Kommende hendelser
+                            Anleggsoversikt
                             </div>
                             <div class="card-body">
-                                <p class="card-text">Robot 7 - Maintenance level 1 - 11:00-12:45</p>
-                                <p class="card-text">Robot 1 - Robot recharge and maintenance - 13:00-14:00</p>
-                                <p class="card-text">Robot 2 - Pipeline Valve Inspection - 14:00-14:30</p>
+                                </div>
+                                <div id="robot-positions-container"></div>
+                                <div id="map" style="position: relative; width: 842px; height: 851px; background-image: url('/static/Facility_map.png');"></div>
+
                             </div>
                         </div>
-                    </div>
+                    </div>                
                 </div>
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-header">
-                            Oppdragskø
-                        </div>
-                        <div class="card-body">
-                            <h5 class="card-title">Neste oppdrag i kø</h5>
-                            <div class="oppdrag">
-                                <div class="oppdrag-kolonne"><i class="fas fa-robot"></i> Robot 4</div>
-                                <div class="oppdrag-kolonne">Mezzanine Deck Third valve</div>
-                                <div class="oppdrag-kolonne">Starter om 30 minutter</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>                
             </main>
         </div>
     </div>
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
+
+            socket.on('update_robot_heartbeat', function(msg) {
+                const data = JSON.parse(msg.data);
+                const robotName = data.robot_name;
+                const heartbeat = data.timestamp;
+                updateRobotInfo(robotName, heartbeat);
+            });
+
+            socket.on('update_pose', function(msg) {
+                const data = JSON.parse(msg.data);
+                
+                if(data.pose && data.pose.position) {
+                    const position = data.pose.position;
+                    updateRobotPosition(data.isar_id, data.robot_name, position.x, position.y, position.z);
+                } else {
+                    console.error('Pose eller position er undefined', data);
+                }
+            });
+
+
+
+
+            function updateRobotPosition(isarId, robotName, x, y, z) {
+                var map = document.getElementById('map');
+
+                var robotMapElement = document.getElementById(`robot-map-${isarId}`);
+                var robotNameElement = document.getElementById(`robot-name-${isarId}`);
+
+                if (!robotMapElement) {
+                    robotMapElement = document.createElement('div');
+                    robotMapElement.id = `robot-map-${isarId}`;
+                    robotMapElement.style.position = 'absolute';
+                    robotMapElement.style.width = '10px';
+                    robotMapElement.style.height = '10px';
+                    robotMapElement.style.borderRadius = '50%';
+                    robotMapElement.style.backgroundColor = 'red';
+                    map.appendChild(robotMapElement);
+
+                    robotNameElement = document.createElement('div');
+                    robotNameElement.id = `robot-name-${isarId}`;
+                    robotNameElement.style.position = 'absolute';
+                    robotNameElement.style.whiteSpace = 'nowrap';
+                    robotNameElement.style.color = 'black';
+                    robotNameElement.style.fontSize = '12px';
+                    robotNameElement.style.backgroundColor = 'white';
+                    robotNameElement.style.padding = '2px 5px';
+                    robotNameElement.style.borderRadius = '4px';
+                    map.appendChild(robotNameElement);
+                }
+
+                var xPos = (x / 10) * 514;
+                var yPos = (y / 10) * 472;
+
+                robotMapElement.style.left = `${xPos}px`;
+                robotMapElement.style.top = `${yPos}px`;
+
+                robotNameElement.innerHTML = robotName;
+                robotNameElement.style.left = `${xPos - 5}px`;
+                robotNameElement.style.top = `${yPos + 15}px`;
+            }
+
+            function updateRobotInfo(robotName, heartbeat, position) {
+                var infoElement = document.getElementById('robot-info');
+                infoElement.innerHTML = 'Robot: ' + robotName + '<br>' + 'Hjerteslag: ' + heartbeat;
+            }
+
+        });
+    </script>
 </body>
 </html>
+{% endblock %}

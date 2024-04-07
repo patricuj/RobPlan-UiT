@@ -6,11 +6,7 @@ from . import main
 def index():
     return render_template('/main/home.html')
 
-@main.route('/missions')
-def missions():
-    return render_template('/missions/missions.html')
 
-
-@main.route('/robot_fleet')
-def robot_fleet():
-    return render_template('/robot_fleet/robot_fleet.html')
+@main.route('/robot_status/<isar_id>')
+def robot_status(isar_id):
+    return render_template('/robot_status/robot_status.html', isar_id=isar_id)

@@ -33,33 +33,32 @@
             </nav>
             <main role="main" class="col-md-10 ml-sm-auto col-lg-10 px-4">
                 <br><br>
-                <h1>God morgen, Alise</h1>
+                <h1>Velkommen, Alise</h1>
                 <div class="row">
                     <div class="col-md-6">
                         <div class="card">
                             <div class="card-header">
-                                Pågående Oppdrag
+                                Oppdrag
                             </div>
                             <div class="card-body">
                                 <h5 class="card-title">3 aktive oppdrag</h5>
                                 <div class="oppdrag-liste">
                                     <div class="oppdrag">
-                                        <div class="oppdrag-kolonne"><i class="fas fa-robot"></i> Robot 1</div>
-                                        <div class="oppdrag-kolonne">Mezzanine Deck</div>
-                                        <div class="oppdrag-kolonne">Ferdig om 30 minutter</div>
+                                        <div class="oppdrag-kolonne"><i class="fas fa-robot"></i> Placebot</div>
+                                        <div class="oppdrag-kolonne">Maintenance level 1</div>
+                                        <div class="oppdrag-kolonne" id="Placebot-time">Tid kjørt: 10 min 10 sek</div>
+                                    </div>                                    
+                                    <div class="oppdrag">
+                                        <div class="oppdrag-kolonne"><i class="fas fa-robot"></i> Placebot2</div>
+                                        <div class="oppdrag-kolonne">Base test</div>
+                                        <div class="oppdrag-kolonne" id="Placebot2-time">Tid kjørt: 46 min 30 sek</div>
                                     </div>
                                     <div class="oppdrag">
-                                        <div class="oppdrag-kolonne"><i class="fas fa-robot"></i> Robot 2</div>
-                                        <div class="oppdrag-kolonne">Mezzanine Deck First valve</div>
-                                        <div class="oppdrag-kolonne">Ferdig om 1 time</div>
-                                    </div>
-                                    <div class="oppdrag">
-                                        <div class="oppdrag-kolonne"><i class="fas fa-robot"></i> Robot 3</div>
-                                        <div class="oppdrag-kolonne">Mezzanine Deck Second valve</div>
-                                        <div class="oppdrag-kolonne">Ferdig om 2 timer</div>
+                                        <div class="oppdrag-kolonne"><i class="fas fa-robot"></i> Placebot3</div>
+                                        <div class="oppdrag-kolonne">Maintenance level 2</div>
+                                        <div class="oppdrag-kolonne" id="Placebot3-time">Tid kjørt: 38 min 24 sek</div>
                                     </div>
                                 </div>
-                                <a href="#" class="btn btn-secondary">Se alle oppdrag</a>
                             </div>
                         </div>
                     </div>
@@ -87,6 +86,23 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
+            var startTime = {
+            'Placebot': 10 * 61,
+            'Placebot2': 45 * 62,
+            'Placebot3': 36 * 64 
+        };
+
+            setInterval(function() {
+                Object.keys(startTime).forEach(function(robot) {
+                    var timeElement = document.getElementById(robot + '-time');
+                    if (timeElement) {
+                        startTime[robot] += 1;
+                        var minutes = Math.floor(startTime[robot] / 60);
+                        var seconds = startTime[robot] % 60;
+                        timeElement.innerHTML = 'Tid kjørt: ' + minutes + ' min ' + seconds + ' sek';
+                    }
+                });
+            }, 1000);
 
             socket.on('update_robot_heartbeat', function(msg) {
                 const data = JSON.parse(msg.data);
@@ -107,8 +123,6 @@
             });
 
 
-
-
             function updateRobotPosition(isarId, robotName, x, y, z) {
                 var map = document.getElementById('map');
 
@@ -116,13 +130,12 @@
                 var robotNameElement = document.getElementById(`robot-name-${isarId}`);
 
                 if (!robotMapElement) {
-                    robotMapElement = document.createElement('div');
+                    robotMapElement = document.createElement('img');
                     robotMapElement.id = `robot-map-${isarId}`;
+                    robotMapElement.src = '/static/robot.png';
                     robotMapElement.style.position = 'absolute';
-                    robotMapElement.style.width = '10px';
-                    robotMapElement.style.height = '10px';
-                    robotMapElement.style.borderRadius = '50%';
-                    robotMapElement.style.backgroundColor = 'red';
+                    robotMapElement.style.width = '40px';
+                    robotMapElement.style.height = '40px';
                     map.appendChild(robotMapElement);
 
                     robotNameElement = document.createElement('div');
@@ -140,13 +153,14 @@
                 var xPos = (x / 10) * 514;
                 var yPos = (y / 10) * 472;
 
-                robotMapElement.style.left = `${xPos}px`;
-                robotMapElement.style.top = `${yPos}px`;
+                robotMapElement.style.left = `${xPos - robotMapElement.width / 2}px`;
+                robotMapElement.style.top = `${yPos - robotMapElement.height / 2}px`;
 
                 robotNameElement.innerHTML = robotName;
                 robotNameElement.style.left = `${xPos - 5}px`;
                 robotNameElement.style.top = `${yPos + 15}px`;
             }
+
 
             function updateRobotInfo(robotName, heartbeat, position) {
                 var infoElement = document.getElementById('robot-info');

@@ -4,6 +4,51 @@
 <html lang="no">
 <head>
 <body>
+<div class="modal fade" id="startMissionModal" tabindex="-1" role="dialog" aria-labelledby="startMissionModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="startMissionModalLabel">Start Oppdrag</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Lukk">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <button type="button" class="btn btn-success" id="startMissionNow">Start oppdrag nå</button>
+          <hr>
+          <div>
+            <label for="scheduleTime">Start ved gitt klokkeslett:</label>
+            <select id="scheduleHour" class="custom-select">
+            </select>
+            <span>:</span>
+            <select id="scheduleMinute" class="custom-select">
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Lukk</button>
+          <button type="button" class="btn btn-primary" id="scheduleMission">Planlegg start</button>
+        </div>
+      </div>
+    </div>
+  </div>
+<div class="modal fade" id="statusModal" tabindex="-1" role="dialog" aria-labelledby="statusModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="statusModalLabel">Oppdragsstatus</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Lukk">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body" id="statusMessage">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Lukk</button>
+        </div>
+      </div>
+    </div>
+  </div>  
     <div class="container-fluid">
         <div class="row">
             <nav class="col-md-2 d-none d-md-block sidebar">
@@ -42,7 +87,6 @@
                             <th>Oppdragsnavn</th>
                             <th>Sist fullført</th>
                             <th>Frist</th>
-                            <th>Kjør oppdrag</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -51,87 +95,105 @@
                             <td>Maintenance level 1</td>
                             <td>10.12.2023</td>
                             <td>12.02.2024</td>
-                            <td><i class="fas fa-plus-circle start-mission" data-mission='{"id":"1","tasks":[{"steps":[{"type":"drive_to_pose","pose":{"position":{"x":-2,"y":-2,"z":0,"frame":"asset"},"orientation":{"x":0,"y":0,"z":0.4794255,"w":0.8775826,"frame":"asset"},"frame":"asset"}},{"type":"take_image","target":{"x":2,"y":2,"z":0,"frame":"robot"}}]}]}'></i></td>
+                            <td><button class="btn btn-placebot start-mission" data-port="3000" data-mission='{"id":"1","tasks":[{"steps":[{"type":"drive_to_pose","pose":{"position":{"x":-2,"y":-2,"z":0,"frame":"asset"},"orientation":{"x":0,"y":0,"z":0.4794255,"w":0.8775826,"frame":"asset"},"frame":"asset"}},{"type":"take_image","target":{"x":2,"y":2,"z":0,"frame":"robot"}}]}]}'>Start oppdrag</button></td>
                         </tr>
                         <tr>
                             <td>Ingen planlagt inspeksjon</td>
                             <td>Base test</td>
                             <td>Aldri fullført</td>
                             <td>N/A</td>
-                            <td><i class="fas fa-plus-circle"></i></td>
+                            <td><button class="btn btn-placebot start-mission" data-port="4000" data-mission='{"id":"2","tasks":[{"steps":[{"type":"drive_to_pose","pose":{"position":{"x":-2,"y":-2,"z":0,"frame":"asset"},"orientation":{"x":0,"y":0,"z":0.4794255,"w":0.8775826,"frame":"asset"},"frame":"asset"}},{"type":"take_image","target":{"x":2,"y":2,"z":0,"frame":"robot"}}]}]}'>Start oppdrag</button></td>
                         </tr>
                         <tr>
-                            <td>Planlagt for i morgen</td>
+                            <td>Ingen planlagt inspeksjon</td>
                             <td>Maintenance level 2</td>
                             <td>12.01.2024</td>
-                            <td>12.02.2024</td>
-                            <td><i class="fas fa-plus-circle"></i></td>
+                            <td>12.04.2024</td>
+                            <td><button class="btn btn-placebot start-mission" data-port="6000" data-mission='{"id":"3","tasks":[{"steps":[{"type":"drive_to_pose","pose":{"position":{"x":-2,"y":-2,"z":0,"frame":"asset"},"orientation":{"x":0,"y":0,"z":0.4794255,"w":0.8775826,"frame":"asset"},"frame":"asset"}},{"type":"take_image","target":{"x":2,"y":2,"z":0,"frame":"robot"}}]}]}'>Start oppdrag</button></td>
                         </tr>
                         <tr>
-                            <td>No planned inspection</td>
+                            <td>Ingen planlagt inspeksjon</td>
+                            <td>Pipeline valve 2 inspection</td>
+                            <td>Aldri fullført</td>
+                            <td>12.04.2024</td>
+                            <td><button class="btn btn-placebot start-mission">Start oppdrag</button></td>
+                        </tr>
+                        <tr>
+                            <td>Ingen planlagt inspeksjon</td>
+                            <td>Maintenance level 2</td>
+                            <td>12.01.2024</td>
+                            <td>30.04.2024</td>
+                            <td><button class="btn btn-placebot start-mission">Start oppdrag</button></td>
+                        </tr>
+                        <tr>
+                            <td>Ingen planlagt inspeksjon</td>
                             <td>Pipeline valve inspection</td>
                             <td>Aldri fullført</td>
-                            <td>12.02.2024</td>
-                            <td><i class="fas fa-plus-circle"></i></td>
+                            <td>30.04.2024</td>
+                            <td><button class="btn btn-placebot start-mission">Start oppdrag</button></td>
                         </tr>
                     </tbody>
                     <script>
                         document.addEventListener('DOMContentLoaded', function() {
+                            const scheduleHour = document.getElementById('scheduleHour');
+                            const scheduleMinute = document.getElementById('scheduleMinute');
+                            for (let i = 0; i < 24; i++) {
+                                let option = new Option(i.toString().padStart(2, '0'), i);
+                                scheduleHour.add(option);
+                            }
+                            for (let i = 0; i < 60; i++) {
+                                let option = new Option(i.toString().padStart(2, '0'), i);
+                                scheduleMinute.add(option);
+                            }
+                        
                             const startButtons = document.querySelectorAll('.start-mission');
-                
                             startButtons.forEach(button => {
                                 button.addEventListener('click', function() {
-                                    const missionData = this.getAttribute('data-mission');
-                                    startPredefinedMission(JSON.parse(missionData));
+                                    window.currentMissionData = JSON.parse(this.getAttribute('data-mission'));
+                                    window.currentPort = this.getAttribute('data-port');
+                                    window.currentButton = button;
+                        
+                                    $('#startMissionModal').modal('show');
                                 });
                             });
+                        
+                            document.getElementById('startMissionNow').addEventListener('click', function() {
+                                startPredefinedMission(window.currentMissionData, window.currentPort);
+                                $('#startMissionModal').modal('hide');
+                            });
+                        
+                            document.getElementById('scheduleMission').addEventListener('click', function() {
+                                const hour = scheduleHour.value.padStart(2, '0');
+                                const minute = scheduleMinute.value.padStart(2, '0');
+                                window.currentButton.closest('tr').getElementsByTagName('td')[0].textContent = `Planlagt start kl. ${hour}:${minute}`;
+                                $('#startMissionModal').modal('hide');
+                            });
                         });
-                
-                        function startPredefinedMission() {
-                            const predefinedMission = {
-                                "id": "1",
-                                "tasks": [
-                                    {
-                                        "steps": [
-                                            {
-                                                "type": "drive_to_pose",
-                                                "pose": {
-                                                    "position": {
-                                                        "x": -2,
-                                                        "y": -2,
-                                                        "z": 0,
-                                                        "frame": "asset"
-                                                    },
-                                                    "orientation": {
-                                                        "x": 0,
-                                                        "y": 0,
-                                                        "z": 0.4794255,
-                                                        "w": 0.8775826,
-                                                        "frame": "asset"
-                                                    },
-                                                    "frame": "asset"
-                                                }
-                                            },
-                                            {
-                                                "type": "take_image",
-                                                "target": {
-                                                    "x": 2,
-                                                    "y": 2,
-                                                    "z": 0,
-                                                    "frame": "robot"
-                                                }
-                                            }
-                                        ]
-                                    }
-                                ]
-                            };
+                        
+                        function startPredefinedMission(missionData, port) {
+                            const apiUrl = `/start-mission?port=${port}`;
 
-                            fetch('/start-mission', {
+                            let robotName = '';
+                            switch (port) {
+                                case '3000':
+                                    robotName = 'Placebot';
+                                    break;
+                                case '4000':
+                                    robotName = 'Placebot2';
+                                    break;
+                                case '6000':
+                                    robotName = 'Placebot3';
+                                    break;
+                                default:
+                                    robotName = 'Ukjent robot';
+                            }
+
+                            fetch(apiUrl, {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json',
                                 },
-                                body: JSON.stringify(predefinedMission)
+                                body: JSON.stringify(missionData)
                             })
                             .then(response => {
                                 if (!response.ok) {
@@ -140,25 +202,24 @@
                                 return response.json();
                             })
                             .then(data => {
-                                alert('Oppdrag har startet');
+                                document.getElementById('statusMessage').textContent = `Oppdrag ble tildelt ${robotName}. Oppdraget har startet!`;
+                                $('#statusModal').modal('show');
+                                window.currentButton.closest('tr').style.display = 'none';
                             })
                             .catch((error) => {
                                 console.error('Error starting mission:', error);
-                                alert('Feil ved start av oppdrag: ' + error.message);
+                                document.getElementById('statusMessage').textContent = 'Feil ved start av oppdrag: ' + error.message;
+                                $('#statusModal').modal('show');
                             });
                         }
-
+                        
                         function appendLog(container, log) {
                             var logElement = document.createElement('p');
                             logElement.textContent = log;
                             container.appendChild(logElement);
                         }
-                    </script>
-                </table>
-                <div class="text-right">
-                    <button class="btn btn-success">+ Legg til oppdrag</button>
-                    <button class="btn btn-primary">Administrer oppdragsliste</button>
-                </div>             
+                        </script>                                        
+                </table>         
             </main>
         </div>
     </div>

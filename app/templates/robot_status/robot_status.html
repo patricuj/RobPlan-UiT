@@ -57,6 +57,24 @@
       </div>
     </div>
   </div>
+<div class="modal fade" id="statusModal" tabindex="-1" role="dialog" aria-labelledby="statusModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="statusModalLabel">Oppdragsstatus</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Lukk">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="statusMessage">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Lukk</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <body>
     <div class="container-fluid">
         <div class="row">
@@ -85,20 +103,42 @@
                     </li>                                     
                 </ul>
             </nav>
-            <main role="main" class="col-md-10 ml-sm-auto col-lg-10 px-4">
-                <br><br>
-                <h2 id="robot-name-header">Robotstatus</h2>
-                <div class="row" id="robot-container">
+            <main role="main" class="col-md-10 ml-sm-auto col-lg-10 px-4 py-4">
+                <h2 id="robot-name-header" class="mb-4">Robotstatus</h2>
+                <div id="robot-container" class="mb-4"></div>
+                
+                <div class="card mb-4">
+                    <div class="card-header">Oppdragskontroller</div>
+                    <div class="card-body d-flex justify-content-around flex-wrap">
+                        <button class="btn btn-primary mb-2" id="resume">Fortsett oppdrag</button>
+                        <button class="btn btn-primary mb-2" id="pause">Pause oppdrag</button>
+                        <button class="btn btn-danger mb-2" id="stop">Stopp oppdrag</button>
+                        <button class="btn btn-secondary mb-2" id="replan">Replanlegg oppdrag</button>
+                    </div>
                 </div>
-                <div class="control-buttons">
-                    <button class="btn btn-primary control-button" id="resume">Fortsett oppdrag</button>
-                    <button class="btn btn-primary control-button" id="pause">Pause oppdrag</button>
-                    <button class="btn btn-danger control-button" id="stop">STOPP oppdrag</button>
-                    <button class="btn btn-secondary control-button" id="replan">Replanlegg oppdrag</button>
+                <div class="card">
+                    <div class="card-header">Fullførte Oppdrag</div>
+                    <div class="card-body p-0">
+                        <table class="table mb-0">
+                            <thead>
+                                <tr>
+                                    <th style="color: white;">Oppdragsnavn</th>
+                                    <th style="color: white;">Tid Fullført</th>
+                                </tr>
+                            </thead>
+                            <tbody id="completed-missions" style="color: white;">
+                            </tbody>                                    
+                        </table>
+                    </div>
                 </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">Robotposisjon</div>
+                        <div class="card-body p-0">
+                            <div id="map" style="position: relative; width: 100%; height: 600px; background-image: url('/static/Facility_map.png'); background-size: cover; background-position: center;"></div>
             </main>
-        </div>
-    </div>
+            
+                   
     <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
@@ -192,6 +232,69 @@
                 return document.getElementById(`robot_card_${isarId}`);
             }
 
+            socket.on('update_robot_heartbeat', function(msg) {
+                const data = JSON.parse(msg.data);
+                const robotName = data.robot_name;
+                const heartbeat = data.timestamp;
+                updateRobotInfo(robotName, heartbeat);
+            });
+
+            socket.on('update_pose', function(msg) {
+                const data = JSON.parse(msg.data);
+                
+                if(data.pose && data.pose.position) {
+                    const position = data.pose.position;
+                    updateRobotPosition(data.isar_id, data.robot_name, position.x, position.y, position.z);
+                } else {
+                    console.error('Pose eller position er undefined', data);
+                }
+            });
+
+
+            function updateRobotPosition(isarId, robotName, x, y, z) {
+                var map = document.getElementById('map');
+
+                var robotMapElement = document.getElementById(`robot-map-${isarId}`);
+                var robotNameElement = document.getElementById(`robot-name-${isarId}`);
+
+                if (!robotMapElement) {
+                    robotMapElement = document.createElement('img');
+                    robotMapElement.id = `robot-map-${isarId}`;
+                    robotMapElement.src = '/static/robot.png';
+                    robotMapElement.style.position = 'absolute';
+                    robotMapElement.style.width = '40px';
+                    robotMapElement.style.height = '40px';
+                    map.appendChild(robotMapElement);
+
+                    robotNameElement = document.createElement('div');
+                    robotNameElement.id = `robot-name-${isarId}`;
+                    robotNameElement.style.position = 'absolute';
+                    robotNameElement.style.whiteSpace = 'nowrap';
+                    robotNameElement.style.color = 'black';
+                    robotNameElement.style.fontSize = '12px';
+                    robotNameElement.style.backgroundColor = 'white';
+                    robotNameElement.style.padding = '2px 5px';
+                    robotNameElement.style.borderRadius = '4px';
+                    map.appendChild(robotNameElement);
+                }
+
+                var xPos = (x / 10) * 514;
+                var yPos = (y / 10) * 472;
+
+                robotMapElement.style.left = `${xPos - robotMapElement.width / 2}px`;
+                robotMapElement.style.top = `${yPos - robotMapElement.height / 2}px`;
+
+                robotNameElement.innerHTML = robotName;
+                robotNameElement.style.left = `${xPos - 5}px`;
+                robotNameElement.style.top = `${yPos + 15}px`;
+            }
+
+
+            function updateRobotInfo(robotName, heartbeat, position) {
+                var infoElement = document.getElementById('robot-info');
+                infoElement.innerHTML = 'Robot: ' + robotName + '<br>' + 'Hjerteslag: ' + heartbeat;
+            }
+
     
             robotIds.forEach(isarId => {
                 const robotStatusData = localStorage.getItem(`robot_status_${isarId}`);
@@ -214,7 +317,7 @@
                 })
                 .then(response => {
                     if (response.ok) {
-                        console.log('Oppdrag stoppet vellykket.');
+                        console.log('Oppdrag stoppet.');
                     } else {
                         console.error('Det oppsto en feil ved forsøk på å stoppe oppdraget.');
                     }
@@ -251,10 +354,8 @@
             response.json().then(data => {
                 if (response.ok) {
                     console.log('Handling vellykket.');
-                    alert(data.message);
                 } else {
                     console.error('Det oppsto en feil.');
-                    alert(data.error || 'Det oppsto en feil.');
                 }
     });
 }
@@ -290,7 +391,61 @@ function handleError(error) {
                 }, 4000);
             });
         });
-        </script>
+        document.addEventListener('DOMContentLoaded', function () {
+
+            document.getElementById('stop').addEventListener('click', function() {
+                handleMissionControl('/schedule/stop-mission', 'Oppdrag stoppet vellykket.');
+            });
+
+            document.getElementById('pause').addEventListener('click', function() {
+                handleMissionControl('/schedule/pause-mission', 'Oppdraget er satt på pause.');
+            });
+
+            document.getElementById('resume').addEventListener('click', function() {
+                handleMissionControl('/schedule/resume-mission', 'Oppdraget fortsetter.');
+            });
+
+            function handleMissionControl(url, successMessage) {
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message) {
+                        showModal(data.message);
+                    } else {
+                        showModal(successMessage);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showModal('Nettverksfeil: Kunne ikke kommunisere med serveren.');
+                });
+            }
+
+            function showModal(message) {
+                document.getElementById('statusMessage').innerText = message;
+                $('#statusModal').modal('show');
+            }
+        });
+        document.addEventListener('DOMContentLoaded', function () {
+            const completedMissionsData = [
+                { missionName: "Maintenance level 1", completedAt: "2024-04-01 12:00"},
+                { missionName: "Maintenance level 2", completedAt: "2024-04-02 13:00"},
+            ];
+
+            const tbody = document.getElementById('completed-missions');
+            completedMissionsData.forEach(mission => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>${mission.missionName}</td><td>${mission.completedAt}</td>`;
+                tbody.appendChild(tr);
+            });
+        });
+                </script>
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>

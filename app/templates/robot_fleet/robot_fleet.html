@@ -95,7 +95,7 @@
                     batteryElement.textContent = `${data.battery_level}% Batteri`;
                 } else if (infoType === 'heartbeat') {
                     const heartbeatElement = robotCard.querySelector('.heartbeat');
-                    heartbeatElement.textContent = `Siste hjerteslag: ${data.timestamp}`;
+                    heartbeatElement.textContent = `Heartbeat: ${data.timestamp}`;
                 }
             }
 

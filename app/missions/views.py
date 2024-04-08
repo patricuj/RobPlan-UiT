@@ -1,4 +1,4 @@
-from flask import render_template, request, jsonify
+from flask import Blueprint, render_template, request, jsonify
 import requests
 from . import missions_bp
 
@@ -8,7 +8,9 @@ def missions():
 
 @missions_bp.route('/start-mission', methods=['POST'])
 def start_mission():
-    isar_api_url = 'http://localhost:3000/schedule/start-mission'
+    port = request.args.get('port', default='3000')
+    
+    isar_api_url = f'http://localhost:{port}/schedule/start-mission'
     default_mission_data = request.json
 
     transformed_data = transform_mission_data(default_mission_data)
@@ -73,7 +75,7 @@ def stop_mission():
     response = requests.post(isar_api_url)
 
     if response.status_code == 200:
-        return jsonify({"message": "Oppdrag vellykket stoppet"}), 200
+        return jsonify({"message": "Oppdrag stoppet"}), 200
     else:
         return jsonify({"error": "Kunne ikke stoppe oppdraget", "details": response.text}), response.status_code
 
@@ -83,7 +85,7 @@ def pause_mission():
     response = requests.post(isar_api_url)
     
     if response.status_code == 200:
-        return jsonify({"message": "Oppdrag er pauset"})
+        return jsonify({"message": "Oppdrag er pauset"}), 200
     else:
         return jsonify({"error": "Kunne ikke pause oppdraget",
                         "details": response.text}), response.status_code

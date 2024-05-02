@@ -1,16 +1,27 @@
 from flask import Flask
-from flask_wtf.csrf import CSRFProtect
-from flask_socketio import SocketIO
 from .mqtt_client import MQTTClient
-
-csrf = CSRFProtect()
-socketio = SocketIO(cors_allowed_origins="*")
+from config import Config
+from .models import User 
+from .extensions import db, login_manager, socketio, csrf, moment
+from .models import Notification
+from flask_login import current_user
 
 def create_app():
     app = Flask(__name__)
-    socketio.init_app(app)
+    app.config.from_object(Config)
 
-    mqtt_client = MQTTClient('localhost', 1883, 'isar', None, socketio)
+    db.init_app(app)
+    login_manager.init_app(app)
+    socketio.init_app(app, cors_allowed_origins="*")
+    csrf.init_app(app)
+
+    login_manager.login_view = 'auth.login'
+
+    @login_manager.user_loader
+    def load_user(user_id):
+        return User.query.get(int(user_id)) 
+
+    mqtt_client = MQTTClient('localhost', 1883, 'isar', None, socketio, app)
     mqtt_client.connect()
     
     from .main import main as main_blueprint

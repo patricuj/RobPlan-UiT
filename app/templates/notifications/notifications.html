@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block content %}
+<!DOCTYPE html>
+<html lang="no">
+<head>
+{{ super() }}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+{{ moment.include_moment() }}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <nav class="col-md-2 d-none d-md-block sidebar">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.home') }}"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('robot_fleet.robot_fleet') }}"><i class="fas fa-ship"></i> Flåteoversikt</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('missions.missions') }}"><i class="fas fa-briefcase"></i> Oppdrag</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('history.history') }}"><i class="fas fa-history"></i> Historikk</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('notifications.notifications') }}">
+                            <i class="fas fa-bell"></i> Notifikasjoner
+                            {% if unread_count > 0 %}
+                            <span class="unread-count">{{ unread_count }}</span>
+                            {% endif %}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('settings.settings') }}"><i class="fas fa-cog"></i> Innstillinger</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/"><i class="fas fa-sign-out-alt"></i> Logg Ut</a>
+                    </li>                                     
+                </ul>
+            </nav>
+        <div class="col-md-10">
+            <br><br>
+            <h2>Notifikasjoner</h2>
+            <form action="{{ url_for('notifications.mark_all_read') }}" method="post">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                <button type="submit" class="btn btn-danger">Marker alle som lest</button>
+            </form>            
+            <div class="notification-list">
+                {% for notification in notifications %}
+                <div class="notification-item {{ 'notification-severity-high' if notification.Severity == 'High' else 'notification-severity-low' }}">
+                    <div class="notification-image"></div>
+                    <div class="notification-content">
+                        <strong>{{ notification.Message }}</strong>
+                        <small>{{ notification.Type }}</small>
+                        <small>- {{ moment(notification.Timestamp).fromNow() }}</small>
+                    </div>
+                    {% if not notification.IsRead %}
+                    <form action="{{ url_for('notifications.delete_notification', notification_id=notification.idNotifications) }}" method="post">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                        <button type="submit" class="delete-notification-btn">Merk som lest</button>
+                    </form>
+                    {% endif %}
+                </div>
+                {% else %}
+                <div class="notification-item">Ingen notifikasjoner å vise.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

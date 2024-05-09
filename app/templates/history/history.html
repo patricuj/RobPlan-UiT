@@ -8,7 +8,7 @@
         <nav class="col-md-2 d-none d-md-block sidebar">
             <ul class="nav flex-column">
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('main.index') }}"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+                    <a class="nav-link" href="{{ url_for('main.home') }}"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="{{ url_for('robot_fleet.robot_fleet') }}"><i class="fas fa-ship"></i> Flåteoversikt</a>
@@ -20,10 +20,15 @@
                     <a class="nav-link active" href="#"><i class="fas fa-history"></i> Historikk</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="#"><i class="fas fa-bell"></i> Notifikasjoner</a>
+                    <a class="nav-link" href="{{ url_for('notifications.notifications') }}">
+                        <i class="fas fa-bell"></i> Notifikasjoner
+                        {% if unread_count > 0 %}
+                            <span class="unread-count">{{ unread_count }}</span>
+                        {% endif %}
+                    </a>
                 </li>
-                <li class="nav-item mt-auto">
-                    <a class="nav-link" href="#"><i class="fas fa-cog"></i> Innstillinger</a>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('settings.settings') }}"><i class="fas fa-cog"></i> Innstillinger</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="/"><i class="fas fa-sign-out-alt"></i> Logg Ut</a>
@@ -50,6 +55,7 @@
                 <a href="{{ url_for('history.history', page=page, sort='asc', robot_name=selected_robot) }}" class="{{ 'active-sort' if sort_order == 'asc' else '' }}">Eldste først</a> |
                 <a href="{{ url_for('history.history', page=page, sort='desc', robot_name=selected_robot) }}" class="{{ 'active-sort' if sort_order == 'desc' else '' }}">Nyeste først</a>
             </div>
+            <input type="text" id="search-input" placeholder="Søk etter oppdrag...">
             <div class="filter-menu">
                 <form action="{{ url_for('history.history') }}" method="get">
                     <label for="from-date">Fra dato:</label>
@@ -111,5 +117,35 @@
                     {% endif %}
                 </ul>
             </nav>
-        
+<script>
+document.getElementById('search-input').addEventListener('input', function() {
+    var query = this.value;
+    var robotName = document.getElementById('robot-select').value;
+    var fromDate = document.getElementById('from-date').value;
+    var toDate = document.getElementById('to-date').value;
+
+    fetch(`/search-history?query=${encodeURIComponent(query)}&robot_name=${encodeURIComponent(robotName)}&from_date=${encodeURIComponent(fromDate)}&to_date=${encodeURIComponent(toDate)}`)
+        .then(response => response.json())
+        .then(data => {
+            updateHistoryTable(data);
+        })
+        .catch(error => console.error('Error:', error));
+});
+
+function updateHistoryTable(data) {
+    var tableBody = document.getElementById('history-content');
+    tableBody.innerHTML = '';
+    data.forEach(item => {
+        var row = `<tr>
+                    <td style="color: green;">Fullført</td>
+                    <td>${item.mission_name}</td>
+                    <td>${item.robot_name}</td>
+                    <td>${item.date} kl. ${item.time}</td>
+                    <td>${item.result_id}</td>
+                    <td><a href="/report/${item.result_id}" target="_blank">Vis Rapport</a></td>
+                </tr>`;
+        tableBody.innerHTML += row;
+    });
+}
+</script>
 {% endblock %}

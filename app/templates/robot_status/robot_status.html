@@ -93,10 +93,15 @@
                         <a class="nav-link" href="{{ url_for('history.history') }}"><i class="fas fa-history"></i> Historikk</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#"><i class="fas fa-bell"></i> Notifikasjoner</a>
+                        <a class="nav-link" href="{{ url_for('notifications.notifications') }}">
+                            <i class="fas fa-bell"></i> Notifikasjoner
+                            {% if unread_count > 0 %}
+                                <span class="unread-count">{{ unread_count }}</span>
+                            {% endif %}
+                        </a>
                     </li>
-                    <li class="nav-item mt-auto">
-                        <a class="nav-link" href="#"><i class="fas fa-cog"></i> Innstillinger</a>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('settings.settings') }}"><i class="fas fa-cog"></i> Innstillinger</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="/"><i class="fas fa-sign-out-alt"></i> Logg Ut</a>

@@ -14,6 +14,7 @@ def create_app():
     login_manager.init_app(app)
     socketio.init_app(app, cors_allowed_origins="*")
     csrf.init_app(app)
+    moment.init_app(app)
 
     login_manager.login_view = 'auth.login'
 
@@ -44,5 +45,21 @@ def create_app():
 
     from .report import report_bp
     app.register_blueprint(report_bp)
+
+    from .settings import settings_bp
+    app.register_blueprint(settings_bp)
+    
+    from .notifications import notifications_bp
+    app.register_blueprint(notifications_bp)
+
+    @app.context_processor
+    def inject_unread_count():
+        if current_user.is_authenticated:
+            unread_count = Notification.query.filter_by(
+                Users_idUser=current_user.idUser, IsRead=False
+            ).count()
+            adjusted_unread_count = int(unread_count / 2)
+            return {'unread_count': adjusted_unread_count}
+        return {}
 
     return app

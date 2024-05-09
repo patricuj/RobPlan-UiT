@@ -1,8 +1,8 @@
-from flask import render_template, request
+from flask import render_template, request, jsonify
 from . import history_bp
 import os
 import json
-from datetime import date, datetime
+from datetime import datetime
 from math import ceil
 
 
@@ -69,7 +69,7 @@ def list_json_files(directory):
             if file.endswith('.json'):
                 yield os.path.join(root, file)
 
-def get_inspection_data(page=1, per_page=10, sort_order='desc', robot_name='', from_date='', to_date='', results_dir='/home/dennis/isar/results'):
+def get_inspection_data(page=1, per_page=10, sort_order='desc', robot_name='', from_date='', to_date='', query='', results_dir='/home/dennis/isar/results'):
     inspection_data = []
     json_files = list(list_json_files(results_dir))
 
@@ -78,6 +78,8 @@ def get_inspection_data(page=1, per_page=10, sort_order='desc', robot_name='', f
         for item in data.get('data', []):
             for file_info in item.get('files', []):
                 if robot_name and data['additional_meta']['robot_name'] != robot_name:
+                    continue
+                if query and query.lower() not in data['additional_meta']['mission_name'].lower():
                     continue
                 timestamp = file_info.get('timestamp')
                 if timestamp:
@@ -121,3 +123,20 @@ def get_filtered_results_count(robot_name='', from_date='', to_date='', results_
             count += 1
     return count
 
+
+@history_bp.route('/search-history')
+def search_history():
+    query = request.args.get('query', '')
+    robot_name = request.args.get('robot_name', '')
+    sort_order = request.args.get('sort', 'desc')
+    from_date = request.args.get('from_date', '')
+    to_date = request.args.get('to_date', '')
+
+    filtered_data = get_inspection_data(
+        query=query,
+        robot_name=robot_name,
+        sort_order=sort_order,
+        from_date=from_date,
+        to_date=to_date
+    )
+    return jsonify(filtered_data)

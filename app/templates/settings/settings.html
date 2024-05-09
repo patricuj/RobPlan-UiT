@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block content %}
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <nav class="col-md-2 d-none d-md-block sidebar">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.home') }}"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('robot_fleet.robot_fleet') }}"><i class="fas fa-ship"></i> Flåteoversikt</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('missions.missions') }}"><i class="fas fa-briefcase"></i> Oppdrag</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('history.history') }}"><i class="fas fa-history"></i> Historikk</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('notifications.notifications') }}">
+                            <i class="fas fa-bell"></i> Notifikasjoner
+                            {% if unread_count > 0 %}
+                                <span class="unread-count">{{ unread_count }}</span>
+                            {% endif %}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#"><i class="fas fa-cog"></i> Innstillinger</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/"><i class="fas fa-sign-out-alt"></i> Logg Ut</a>
+                    </li>                                     
+                </ul>
+            </nav>
+            <div class="container">
+                <h1>Endre Innstillinger</h1>
+                <form action="{{ url_for('settings.settings') }}" method="post">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                    <div class="form-group">
+                        <label for="email">E-postadresse</label>
+                        <input type="email" class="form-control" id="email" name="email" placeholder="Skriv inn din e-postadresse" value="{{ current_user.Email }}">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Oppdater E-post</button>
+                    <button type="submit" class="btn btn-danger" name="delete_email" value="true">Fjern E-post</button>
+                </form>
+                <div class="mt-4">
+                    <p>Registrert e-post: <strong>{{ current_user.Email or 'Ingen e-post registrert' }}</strong></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>            
+{% endblock %}

@@ -24,3 +24,13 @@ class Notification(db.Model):
     Timestamp = db.Column(db.DateTime, nullable=False)
     IsRead = db.Column(db.Boolean, nullable=False, default=False)
     Users_idUser = db.Column(db.Integer, db.ForeignKey('Users.idUser'), nullable=False)
+
+
+class Mission(db.Model):
+    __tablename__ = 'Missions'
+
+    idMission = db.Column(db.Integer, primary_key=True)
+    MissionName = db.Column(db.String(255), nullable=False)
+    MissionData = db.Column(db.Text, nullable=False)
+    IsAvailable = db.Column(db.Boolean, nullable=False, default=True)
+    Port = db.Column(db.Integer, nullable=False)

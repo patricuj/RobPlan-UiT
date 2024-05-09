@@ -6,7 +6,7 @@
 <div class="container">
     <div class="card">
         <div class="card-header">
-            <h2>Rapport for oppdrag: {{ report_data.mission_name }}</h2>
+            <h2>Rapport for oppdrag: {{ report_data.mission_id }}</h2>
             <h6 class="text-muted">ID: {{ result_id }}</h6>
         </div>
         <div class="card-body">
@@ -18,7 +18,6 @@
                     <p><strong>ISAR ID:</strong> {{ report_data.isar_id }}</p>
                     <p><strong>Plant Code:</strong> {{ report_data.plant_code }}</p>
                     <p><strong>Plant Name:</strong> {{ report_data.plant_name }}</p>
-                    <p><strong>Oppdrags ID:</strong> {{ report_data.mission_id }}</p>
                     <p><strong>Start tid:</strong> {{ report_data.start_time }}</p>
                     <p><strong>Tid fullført:</strong> {{ report_data.timestamp }}</p>
                     <p><strong>Varighet:</strong> {{ report_data.duration }}</p>
@@ -33,7 +32,7 @@
                     </div>
                 </div>
                 <div class="col-md-16">
-                    <h4>MEDIA</h4>
+                    <h4>MEDIA - 3 Punkter inspisert:</h4>
                     <div class="media-list">
                         <div class="media-item" data-toggle="modal" data-target="#electricBoxModal">
                             <img src="{{ url_for('static', filename='electric_box.jpg') }}" alt="Elektrisk Boks" style="cursor: pointer;">

@@ -2,7 +2,7 @@ import paho.mqtt.client as mqtt
 import json
 from .extensions import db
 from datetime import datetime
-from .models import Notification
+from .models import Notification, Result
 
 class MQTTClient:
     def __init__(self, host, port, username=None, password=None, socketio=None, app=None):
@@ -37,6 +37,7 @@ class MQTTClient:
         isar_id = topic_parts[1]
         info_type = topic_parts[2]
         data = json.loads(payload)
+        mission_status = None
         
         if info_type in ['robot_status', 'robot_info', 'mission', 'robot_heartbeat']:
                 if info_type == 'robot_heartbeat':
@@ -49,8 +50,8 @@ class MQTTClient:
                 elif info_type == 'mission':
                     mission_status = data.get('status', None)
                     self.socketio.emit(f'update_{info_type}', {
-                        'data': payload, 
-                        'isar_id': isar_id, 
+                        'data': payload,
+                        'isar_id': isar_id,
                         'robot_name': data.get('robot_name', 'Unknown'),
                         'current_mission_id': data.get('mission_id', None),
                         'status': mission_status,
@@ -62,6 +63,15 @@ class MQTTClient:
                             'robot_name': data.get('robot_name', 'Unknown'),
                             'mission_id': data.get('mission_id'),
                             'severity': 'Low'
+                        })
+                    elif mission_status == 'failed':
+                        error_description = data.get('error_description', 'Ukjent feil')
+                        create_mission_failed_notification(self.app, data.get('mission_id'), data.get('robot_name'), error_description, isar_id)
+                        self.socketio.emit('mission_failed', {
+                            'robot_name': data.get('robot_name', 'Unknown'),
+                            'mission_id': data.get('mission_id'),
+                            'error_description': error_description,
+                            'severity': 'High'
                         })
                 else:
                     self.socketio.emit(f'update_{info_type}', {
@@ -139,4 +149,29 @@ def create_mission_completion_notification(app, mission_id, robot_name):
             IsRead=False
         )
         db.session.add(new_notification)
+        db.session.commit()
+
+def create_mission_failed_notification(app, mission_id, robot_name, error_description, isar_id):
+    with app.app_context():
+        message = f"{robot_name} mislyktes med oppgaven {mission_id}. {error_description}"
+        new_notification = Notification(
+            Users_idUser=1,
+            Message=message,
+            Type='Oppdragsstatus',
+            Severity='High',
+            Details='',
+            Timestamp=datetime.utcnow(),
+            IsRead=False,
+            isar_id=isar_id
+        )
+        db.session.add(new_notification)
+        
+        new_result = Result(
+            MissionName=mission_id,
+            RobotName=robot_name,
+            Status='failed',
+            Timestamp=datetime.utcnow(),
+            Details=error_description
+        )
+        db.session.add(new_result)
         db.session.commit()

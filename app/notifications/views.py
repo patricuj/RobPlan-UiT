@@ -12,6 +12,12 @@ def notifications():
         Users_idUser=current_user.idUser
     ).order_by(Notification.Timestamp.desc()).all()
 
+    for notification in user_notifications:
+        if notification.isar_id:
+            notification.status_url = url_for('main.robot_status', isar_id=notification.isar_id)
+        else:
+            notification.status_url = None
+
     unique_notifications = OrderedDict()
     for notification in user_notifications:
         unique_key = (notification.Message, notification.Timestamp)

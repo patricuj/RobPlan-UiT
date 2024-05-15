@@ -10,7 +10,6 @@
 <body>
     <div class="container-fluid">
         <div class="row">
-            <nav class="col-md-2 d-none d-md-block sidebar">
                 <ul class="nav flex-column">
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('main.home') }}"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
@@ -25,7 +24,7 @@
                         <a class="nav-link" href="{{ url_for('history.history') }}"><i class="fas fa-history"></i> Historikk</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('notifications.notifications') }}">
+                        <a class="nav-link active" href="{{ url_for('notifications.notifications') }}">
                             <i class="fas fa-bell"></i> Notifikasjoner
                             {% if unread_count > 0 %}
                             <span class="unread-count">{{ unread_count }}</span>
@@ -40,7 +39,7 @@
                     </li>                                     
                 </ul>
             </nav>
-        <div class="col-md-10">
+            <main role="main" class="col-md-10 ml-sm-auto col-lg-10 px-4">
             <br><br>
             <h2>Notifikasjoner</h2>
             <form action="{{ url_for('notifications.mark_all_read') }}" method="post">
@@ -49,23 +48,21 @@
             </form>            
             <div class="notification-list">
                 {% for notification in notifications %}
-                <div class="notification-item {{ 'notification-severity-high' if notification.Severity == 'High' else 'notification-severity-low' }}">
+                <div class="notification-item {{ 'notification-severity-high' if notification.Severity == 'High' else 'notification-severity-low' }}" onclick="location.href='{{ notification.status_url if notification.status_url else '#' }}';" style="cursor: pointer;">
                     <div class="notification-image"></div>
                     <div class="notification-content">
                         <strong>{{ notification.Message }}</strong>
                         <small>{{ notification.Type }}</small>
                         <small>- {{ moment(notification.Timestamp).fromNow() }}</small>
                     </div>
-                    {% if not notification.IsRead %}
                     <form action="{{ url_for('notifications.delete_notification', notification_id=notification.idNotifications) }}" method="post">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
                         <button type="submit" class="delete-notification-btn">Merk som lest</button>
                     </form>
-                    {% endif %}
                 </div>
                 {% else %}
                 <div class="notification-item">Ingen notifikasjoner å vise.</div>
-                {% endfor %}
+                {% endfor %}                
             </div>
         </div>
     </div>

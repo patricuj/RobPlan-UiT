@@ -5,7 +5,6 @@
 {% block content %}
 <div class="container-fluid">
     <div class="row">
-        <nav class="col-md-2 d-none d-md-block sidebar">
             <ul class="nav flex-column">
                 <li class="nav-item">
                     <a class="nav-link" href="{{ url_for('main.home') }}"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
@@ -39,59 +38,80 @@
             <br><br>
             <h2>Historikk</h2>
             <div class="table-responsive">
-    </table>   <table class="table table-dark">
-        <thead>
-            <tr>
-                <th>Status</th>
-                <th>Oppdrag</th>
-                <th>Robot</th>
-                <th>Tid fullført</th>
-                <th>Resultat ID</th>
-                <th>Rapport</th>
-            </tr>
-        </thead>
-        <div class="history-controls">
-            <div class="sorting-links">
-                <a href="{{ url_for('history.history', page=page, sort='asc', robot_name=selected_robot) }}" class="{{ 'active-sort' if sort_order == 'asc' else '' }}">Eldste først</a> |
-                <a href="{{ url_for('history.history', page=page, sort='desc', robot_name=selected_robot) }}" class="{{ 'active-sort' if sort_order == 'desc' else '' }}">Nyeste først</a>
-            </div>
-            <input type="text" id="search-input" placeholder="Søk etter oppdrag...">
-            <div class="filter-menu">
-                <form action="{{ url_for('history.history') }}" method="get">
-                    <label for="from-date">Fra dato:</label>
-                    <input type="date" id="from-date" name="from_date" value="{{ from_date }}" pattern="\d{1,2}/\d{1,2}/\d{4}">
-                
-                    <label for="to-date">Til dato:</label>
-                    <input type="date" id="to-date" name="to_date" value="{{ to_date }}" pattern="\d{1,2}/\d{1,2}/\d{4}">
-                    <input type="hidden" name="sort" value="{{ sort_order }}">
-                    <input type="submit" value="Filtrer">
-                    <a href="{{ url_for('history.history', robot_name=selected_robot, sort=sort_order) }}" class="btn btn-warning">Fjern dato</a>
-
-                    <label for="robot-select">Velg robot:</label>
-                    <select name="robot_name" id="robot-select" onchange="this.form.submit()">
-                        <option value="" {{ 'selected' if selected_robot == '' }}>Alle roboter</option>
-                        <option value="Placebot" {{ 'selected' if selected_robot == 'Placebot' }}>Placebot</option>
-                        <option value="Placebot2" {{ 'selected' if selected_robot == 'Placebot2' }}>Placebot2</option>
-                        <option value="Placebot3" {{ 'selected' if selected_robot == 'Placebot3' }}>Placebot3</option>
-                    </select>
-                </form>
-            </div>
-        </div>
-        <tbody id="history-content">
-            {% for item in inspection_data %}
-            <tr>
-                <td style="color: green;">Fullført</td>
-                <td>{{ item.mission_name }}</td>
-                <td>{{ item.robot_name }}</td>
-                <td>{{ item.date }} kl. {{ item.time }}</td>
-                <td>{{ item.result_id }}</td>
-                <td><a href="{{ url_for('report.show_report', result_id=item.result_id) }}" target="_blank">Vis Rapport</a></td>
-            </tr>            
-            {% else %}
-            <tr><td colspan="8">Ingen historiske data tilgjengelige.</td></tr>
-            {% endfor %}
-        </tbody>        
-    </table>
+                <table class="table table-dark">
+                    <thead>
+                        <tr>
+                            <th>Status</th>
+                            <th>Oppdrag</th>
+                            <th>Robot</th>
+                            <th>Tid fullført</th>
+                            <th>Resultat ID</th>
+                            <th>Rapport</th>
+                            <th>Handlinger</th>
+                        </tr>
+                    </thead>
+                    <div class="history-controls">
+                        <div class="sorting-links">
+                            <a href="{{ url_for('history.history', page=page, sort='asc', robot_name=selected_robot, status_filter=status_filter) }}" class="{{ 'active-sort' if sort_order == 'asc' else '' }}">Eldste først</a> |
+                            <a href="{{ url_for('history.history', page=page, sort='desc', robot_name=selected_robot, status_filter=status_filter) }}" class="{{ 'active-sort' if sort_order == 'desc' else '' }}">Nyeste først</a>
+                        </div>
+                        <input type="text" id="search-input" placeholder="Søk etter oppdrag...">
+                        <div class="filter-menu">
+                            <form action="{{ url_for('history.history') }}" method="get">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <label for="from-date">Fra dato:</label>
+                                <input type="date" id="from-date" name="from_date" value="{{ from_date }}" pattern="\d{1,2}/\d{1,2}/\d{4}">
+                                
+                                <label for="to-date">Til dato:</label>
+                                <input type="date" id="to-date" name="to_date" value="{{ to_date }}" pattern="\d{1,2}/\d{1,2}/\d{4}">
+                                <input type="hidden" name="sort" value="{{ sort_order }}">
+                                <input type="submit" value="Filtrer">
+                                <a href="{{ url_for('history.history', robot_name=selected_robot, sort=sort_order) }}" class="btn btn-warning">Fjern dato</a>
+                                <label for="robot-select">Velg robot:</label>
+                                <select name="robot_name" id="robot-select" onchange="this.form.submit()">
+                                    <option value="" {{ 'selected' if selected_robot == '' }}>Alle roboter</option>
+                                    <option value="Placebot" {{ 'selected' if selected_robot == 'Placebot' }}>Placebot</option>
+                                    <option value="Placebot2" {{ 'selected' if selected_robot == 'Placebot2' }}>Placebot2</option>
+                                    <option value="Placebot3" {{ 'selected' if selected_robot == 'Placebot3' }}>Placebot3</option>
+                                </select>
+                                <label for="status-select">Velg status:</label>
+                                <select name="status_filter" id="status-select" onchange="this.form.submit()">
+                                    <option value="all" {{ 'selected' if status_filter == 'all' }}>Alle</option>
+                                    <option value="completed" {{ 'selected' if status_filter == 'completed' }}>Fullførte</option>
+                                    <option value="failed" {{ 'selected' if status_filter == 'failed' }}>Feilede</option>
+                                </select>
+                                <input type="hidden" name="status_filter" value="{{ status_filter }}">
+                            </form>
+                        </div>
+                    </div>
+                    <tbody id="history-content">
+                        {% for item in inspection_data %}
+                        <tr>
+                            <td class="{{ 'status-completed' if item.status == 'completed' else 'status-failed' }}">{{ 'Fullført' if item.status == 'completed' else 'Feilet' }}</td>
+                            <td>{{ item.mission_name }}</td>
+                            <td>{{ item.robot_name }}</td>
+                            <td>{{ item.date }} kl. {{ item.time }}</td>
+                            <td>{{ item.result_id }}</td>
+                            <td>
+                                {% if item.status == 'completed' %}
+                                <a href="{{ url_for('report.show_report', result_id=item.result_id) }}" target="_blank" class="btn btn-primary btn-sm">
+                                    Vis Rapport <i class="fas fa-external-link-alt"></i>
+                                </a>
+                                {% else %}
+                                <a href="{{ url_for('report.show_failed_report', result_id=item.result_id) }}" target="_blank" class="btn btn-primary btn-sm">
+                                    Vis Rapport <i class="fas fa-external-link-alt"></i>
+                                </a>
+                                {% endif %}
+                            </td>                            
+                            <td>
+                                <button class="btn btn-danger btn-sm" onclick="confirmDeleteReport('{{ item.result_id }}', '{{ item.status }}')">Slett</button>
+                            </td>                
+                        </tr>            
+                        {% else %}
+                        <tr><td colspan="8">Ingen historiske data tilgjengelige.</td></tr>
+                        {% endfor %}
+                    </tbody>        
+                </table>
             </div>
             <div id="no-data" class="alert alert-warning" style="display: none;">
                 Ingen historiske data tilgjengelige.
@@ -100,52 +120,130 @@
                 <ul class="pagination">
                     {% if page > 1 %}
                     <li class="page-item">
-                        <a class="page-link" href="{{ url_for('history.history', page=page-1, robot_name=selected_robot, sort=sort_order, from_date=from_date, to_date=to_date) }}">Forrige</a>
+                        <a class="page-link" href="{{ url_for('history.history', page=page-1, robot_name=selected_robot, sort=sort_order, from_date=from_date, to_date=to_date, status_filter=status_filter) }}">Forrige</a>
                     </li>
                     {% endif %}
                     
                     {% for i in range(1, max_page+1) %}
                     <li class="page-item {{ 'active' if i == page else '' }}">
-                        <a class="page-link" href="{{ url_for('history.history', page=i, robot_name=selected_robot, sort=sort_order, from_date=from_date, to_date=to_date) }}">{{ i }}</a>
+                        <a class="page-link" href="{{ url_for('history.history', page=i, robot_name=selected_robot, sort=sort_order, from_date=from_date, to_date=to_date, status_filter=status_filter) }}">{{ i }}</a>
                     </li>
                     {% endfor %}
                     
                     {% if page < max_page %}
                     <li class="page-item">
-                        <a class="page-link" href="{{ url_for('history.history', page=page+1, robot_name=selected_robot, sort=sort_order, from_date=from_date, to_date=to_date) }}">Neste</a>
+                        <a class="page-link" href="{{ url_for('history.history', page=page+1, robot_name=selected_robot, sort=sort_order, from_date=from_date, to_date=to_date, status_filter=status_filter) }}">Neste</a>
                     </li>
                     {% endif %}
                 </ul>
             </nav>
-<script>
-document.getElementById('search-input').addEventListener('input', function() {
-    var query = this.value;
-    var robotName = document.getElementById('robot-select').value;
-    var fromDate = document.getElementById('from-date').value;
-    var toDate = document.getElementById('to-date').value;
 
-    fetch(`/search-history?query=${encodeURIComponent(query)}&robot_name=${encodeURIComponent(robotName)}&from_date=${encodeURIComponent(fromDate)}&to_date=${encodeURIComponent(toDate)}`)
-        .then(response => response.json())
-        .then(data => {
-            updateHistoryTable(data);
-        })
-        .catch(error => console.error('Error:', error));
-});
+            <div class="modal fade" id="deleteConfirmationModal" tabindex="-1" role="dialog" aria-labelledby="deleteConfirmationModalLabel" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="deleteConfirmationModalLabel">Bekreft sletting</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Lukk">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            Er du sikker på at du vil slette denne rapporten?
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Avbryt</button>
+                            <button type="button" class="btn btn-danger" id="confirmDeleteButton">Slett</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-function updateHistoryTable(data) {
-    var tableBody = document.getElementById('history-content');
-    tableBody.innerHTML = '';
-    data.forEach(item => {
-        var row = `<tr>
-                    <td style="color: green;">Fullført</td>
-                    <td>${item.mission_name}</td>
-                    <td>${item.robot_name}</td>
-                    <td>${item.date} kl. ${item.time}</td>
-                    <td>${item.result_id}</td>
-                    <td><a href="/report/${item.result_id}" target="_blank">Vis Rapport</a></td>
-                </tr>`;
-        tableBody.innerHTML += row;
-    });
-}
-</script>
+            <div class="modal fade" id="deleteResultModal" tabindex="-1" role="dialog" aria-labelledby="deleteResultModalLabel" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="deleteResultModalLabel">Rapport Slettet</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Lukk">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            Rapporten har blitt slettet.
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Lukk</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+            let deleteResultId = null;
+            let deleteStatus = null;
+
+            function confirmDeleteReport(resultId, status) {
+                deleteResultId = resultId;
+                deleteStatus = status;
+                $('#deleteConfirmationModal').modal('show');
+            }
+
+            document.getElementById('confirmDeleteButton').addEventListener('click', function() {
+                fetch(`/delete-report?result_id=${encodeURIComponent(deleteResultId)}&status=${encodeURIComponent(deleteStatus)}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        $('#deleteConfirmationModal').modal('hide');
+                        $('#deleteResultModal').modal('show');
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1500);
+                    } else {
+                        response.json().then(data => {
+                            alert(`Kunne ikke slette rapporten: ${data.message}`);
+                        });
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            });
+
+            document.getElementById('search-input').addEventListener('input', function() {
+                var query = this.value;
+                var robotName = document.getElementById('robot-select').value;
+                var fromDate = document.getElementById('from-date').value;
+                var toDate = document.getElementById('to-date').value;
+                var statusFilter = document.getElementById('status-select').value;
+
+                fetch(`/search-history?query=${encodeURIComponent(query)}&robot_name=${encodeURIComponent(robotName)}&from_date=${encodeURIComponent(fromDate)}&to_date=${encodeURIComponent(toDate)}&status_filter=${encodeURIComponent(statusFilter)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        updateHistoryTable(data);
+                    })
+                    .catch(error => console.error('Error:', error));
+            });
+
+            function updateHistoryTable(data) {
+                var tableBody = document.getElementById('history-content');
+                tableBody.innerHTML = '';
+                data.forEach(item => {
+                    var row = `<tr>
+                                <td class="${item.status == 'completed' ? 'status-completed' : 'status-failed'}">${item.status == 'completed' ? 'Fullført' : 'Feilet'}</td>
+                                <td>${item.mission_name}</td>
+                                <td>${item.robot_name}</td>
+                                <td>${item.date} kl. ${item.time}</td>
+                                <td>${item.result_id}</td>
+                                <td>${item.status == 'completed' ? `<a href="/report/${item.result_id}" target="_blank" class="btn btn-primary btn-sm">Vis Rapport</a>` : `<a href="/report/${item.result_id}" target="_blank" class="btn btn-danger btn-sm">Vis Rapport</a>`}</td>
+                                <td><button class="btn btn-danger btn-sm" onclick="confirmDeleteReport('${item.result_id}', '${item.status}')">Slett</button></td>
+                            </tr>`;
+                    tableBody.innerHTML += row;
+                });
+            }
+            </script>
+        </main>
+    </div>
+</div>
 {% endblock %}

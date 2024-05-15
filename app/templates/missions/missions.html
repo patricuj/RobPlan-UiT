@@ -53,6 +53,7 @@
       </div>
     </div>
   </div>
+
   <div class="modal fade" id="addMissionModal" tabindex="-1" role="dialog" aria-labelledby="addMissionModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
@@ -63,10 +64,23 @@
                 </button>
             </div>
             <div class="modal-body">
-                <form id="addMissionForm">
+                <form id="addMissionForm" method="post" action="{{ url_for('missions.add_mission') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="form-group">
-                        <label for="missionName">Oppdragsnavn</label>
-                        <input type="text" class="form-control" id="missionName" required>
+                        <label for="MissionName">Oppdragsnavn</label>
+                        <input type="text" class="form-control" id="MissionName" name="MissionName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="Status">Status</label>
+                        <input type="text" class="form-control" id="Status" name="Status" value="Ingen planlagt inspeksjon">
+                    </div>
+                    <div class="form-group">
+                        <label for="DeadlineDate">Frist Dato</label>
+                        <input type="date" class="form-control" id="DeadlineDate" name="DeadlineDate">
+                    </div>
+                    <div class="form-group">
+                        <label for="DeadlineTime">Frist Tid</label>
+                        <input type="time" class="form-control" id="DeadlineTime" name="DeadlineTime">
                     </div>
                     <div class="form-group">
                         <label for="selectedInspectionPoints">Dra inspeksjonspunkter etter ønsket rekkefølge hit:</label>
@@ -90,40 +104,8 @@
         </div>
     </div>
 </div>
-<div class="modal fade" id="editMissionModal" tabindex="-1" role="dialog" aria-labelledby="editMissionModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="editMissionModalLabel">Endre Oppdrag</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Lukk">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <form id="editMissionForm" action="{{ url_for('missions.edit_mission') }}" method="post">
-                    <div class="form-group">
-                        <label for="editMissionName">Oppdragsnavn</label>
-                    </div>
-                    <div class="form-group">
-                        <label for="editInspectionPoints">Velg inspeksjonspunkter</label>
-                        <select multiple class="form-control" id="editInspectionPoints">
-                            <option>Valve</option>
-                            <option>Svitsj</option>
-                            <option>Elektrisk boks</option>
-                            <option>Pipeline</option>
-                            <option>Tank</option>
-                            <option>Pump</option>
-                        </select>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Oppdater Oppdrag</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
     <div class="container-fluid">
         <div class="row">
-            <nav class="col-md-2 d-none d-md-block sidebar">
                 <ul class="nav flex-column">
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('main.home') }}"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
@@ -154,18 +136,26 @@
                 </ul>
             </nav>
             <main role="main" class="col-md-10 ml-sm-auto col-lg-10 px-4">
-            </br>
-            </br>
+                <br><br>
                 <h2>Oppdrag</h2>
-            </br>
-                <button class="btn btn-primary custom-button" data-toggle="modal" data-target="#addMissionModal">Legg til nytt oppdrag</button>
-                <table class="table table-dark table-striped">
+                <div class="d-flex justify-content-between">
+                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addMissionModal">
+                        Legg til nytt oppdrag
+                    </button>
+                    <div class="legend">
+                        <button class="badge badge-success badge-success-button" id="makeAllMissionsAvailable">Oppdrag tilgjengelig</button>
+                        <span class="badge badge-warning">Oppdrag ikke tilgjengelig</span>
+                    </div>
+                </div>
+                <br>
+                <table class="table table-dark">
                     <thead>
                         <tr>
                             <th>Status</th>
                             <th>Oppdragsnavn</th>
                             <th>Sist fullført</th>
                             <th>Frist</th>
+                            <th></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -188,7 +178,14 @@
                                         <span class="sr-only">Toggle Dropdown</span>
                                     </button>
                                     <div class="dropdown-menu">
-                                        <a class="dropdown-item" href="#" onclick="editMission({{ mission.idMission }})">Endre oppdrag</a>
+                                        <a class="dropdown-item edit-mission"
+                                           href="#"
+                                           data-id="{{ mission.idMission }}"
+                                           data-name="{{ mission.MissionName }}"
+                                           data-status="{{ mission.Status }}"
+                                           data-deadline="{{ mission.Deadline }}">
+                                            Endre oppdrag
+                                        </a>
                                         <form action="{{ url_for('missions.delete_mission', mission_id=mission.idMission) }}" method="post">
                                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                             <button type="submit" class="dropdown-item">Slette oppdrag</button>
@@ -197,206 +194,256 @@
                                 </div>
                             </td>
                         </tr>
-                        {% endfor %}                        
-                    </tbody>                                       
-                    <script>
-                        document.addEventListener('DOMContentLoaded', function() {
-                            const scheduleHour = document.getElementById('scheduleHour');
-                            const scheduleMinute = document.getElementById('scheduleMinute');
-                            for (let i = 0; i < 24; i++) {
-                                let option = new Option(i.toString().padStart(2, '0'), i);
-                                scheduleHour.add(option);
-                            }
-                            for (let i = 0; i < 60; i++) {
-                                let option = new Option(i.toString().padStart(2, '0'), i);
-                                scheduleMinute.add(option);
-                            }
-                        
-                            const startButtons = document.querySelectorAll('.start-mission');
-                            startButtons.forEach(button => {
-                                button.addEventListener('click', function() {
-                                    console.log("Raw mission data:", this.getAttribute('data-mission'));
-                                    window.currentMissionData = JSON.parse(this.getAttribute('data-mission'));
-                                    window.currentMissionName = this.getAttribute('data-mission-name');
-                                    window.currentPort = this.getAttribute('data-port');
-                                    window.currentButton = button;
-                        
-                                    $('#startMissionModal').modal('show');
-                                });
-                            });
-                        
-                            document.getElementById('startMissionNow').addEventListener('click', function() {
-                                startPredefinedMission(window.currentMissionData, window.currentMissionName, window.currentPort);
-                                $('#startMissionModal').modal('hide');
-                            });
-
-                        
-                            document.getElementById('scheduleMission').addEventListener('click', function() {
-                                const hour = scheduleHour.value.padStart(2, '0');
-                                const minute = scheduleMinute.value.padStart(2, '0');
-                                window.currentButton.closest('tr').getElementsByTagName('td')[0].textContent = `Planlagt start kl. ${hour}:${minute}`;
-                                $('#startMissionModal').modal('hide');
-                            });
-                        });
-                        
-                        function startPredefinedMission(missionData, missionName, port) {
-                            const numericPort = parseInt(port, 10);
-                            const apiUrl = `/start-mission?port=${port}`;
-
-                            missionData.mission_definition = missionData.mission_definition || {};
-                            missionData.mission_definition.id = missionData.id;
-                            missionData.mission_definition.name = missionName;
-
-                            let robotName = '';
-                            switch (numericPort) {
-                                case 3000:
-                                    robotName = 'Placebot';
-                                    break;
-                                case 4000:
-                                    robotName = 'Placebot2';
-                                    break;
-                                case 6000:
-                                    robotName = 'Placebot3';
-                                    break;
-                                default:
-                                    robotName = 'Ukjent robot';
-                            }
-
-                            fetch(apiUrl, {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
-                                },
-                                body: JSON.stringify(missionData)
-                            })
-                            .then(response => {
-                                if (!response.ok) {
-                                    throw new Error('Network response was not ok');
-                                }
-                                return response.json();
-                            })
-                            .then(data => {
-                                document.getElementById('statusMessage').textContent = `Oppdrag ble tildelt ${robotName}. Oppdraget har startet!`;
-                                $('#statusModal').modal('show');
-                                window.currentButton.closest('tr').style.display = 'none';
-                            })
-                            .catch((error) => {
-                                console.error('Error starting mission:', error);
-                                document.getElementById('statusMessage').textContent = 'Feil ved start av oppdrag: ' + error.message;
-                                $('#statusModal').modal('show');
-                            });
-                        }
-                        
-                        function appendLog(container, log) {
-                            var logElement = document.createElement('p');
-                            logElement.textContent = log;
-                            container.appendChild(logElement);
-                        }
-                        document.addEventListener('DOMContentLoaded', function() {
-                            const startButtons = document.querySelectorAll('.start-mission');
-                            startButtons.forEach(button => {
-                                button.addEventListener('click', function() {
-                                    const available = this.getAttribute('data-available') === 'true';
-                                    const missionModal = $('#startMissionModal');
-                                    const startButton = missionModal.find('#startMissionNow');
-                                    const availabilityMessage = missionModal.find('#availabilityMessage');
-
-                                    if (!available) {
-                                        startButton.addClass('btn-warning').removeClass('btn-success').prop('disabled', true);
-                                        availabilityMessage.text('Dette oppdraget kan ikke startes før kl 15:00.');
-                                    } else {
-                                        startButton.removeClass('btn-warning').addClass('btn-success').prop('disabled', false);
-                                        availabilityMessage.empty();
-                                    }
-
-                                    window.currentMissionData = JSON.parse(this.getAttribute('data-mission'));
-                                    window.currentMissionName = this.getAttribute('data-mission-name');
-                                    window.currentPort = this.getAttribute('data-port');
-                                    window.currentButton = this;
-
-                                    missionModal.modal('show');
-                                });
-                            });
-                        });
-
-                        document.getElementById('addMissionForm').addEventListener('submit', function(e) {
-                            e.preventDefault();
-                            const missionName = document.getElementById('missionName').value;
-                            const postData = { missionName: missionName };
-
-                            fetch('/add-mission', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
-                                },
-                                body: JSON.stringify(postData)
-                            })
-                            .then(response => {
-                                if (!response.ok) throw new Error('Network response was not ok.');
-                                return response.json();
-                            })
-                            .then(data => {
-                                alert('Oppdrag lagt til!');
-                                window.location.reload(); 
-                            });
-                        });
-
-                        function editMission(missionId) {
-                            const missionRow = document.querySelector(`#mission_${missionId}`);
-                            const missionName = missionRow.querySelector('.mission-name').textContent;
-                            document.getElementById('editMissionName').value = missionName;
-                            document.getElementById('editMissionId').value = missionId;
-                            
-                            $('#editMissionModal').modal('show');
-                        }
-
-                        document.getElementById('editMissionForm').addEventListener('submit', function(e) {
-                            e.preventDefault();
-                            const formData = {
-                                missionId: document.getElementById('editMissionId').value,
-                                missionName: document.getElementById('editMissionName').value,
-                            };
-
-                            fetch('/edit-mission', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
-                                },
-                                body: JSON.stringify(formData)
-                            })
-                            .then(response => {
-                                if (!response.ok) throw new Error('Network response was not ok.');
-                                return response.json();
-                            })
-                            .then(data => {
-                                alert('Oppdrag oppdatert!');
-                                window.location.reload();
-                            })
-                            .catch(error => {
-                                console.error('Error updating mission:', error);
-                                alert('Feil ved oppdatering av oppdrag.');
-                            });
-                        });
-
-
-
-                        </script>                                        
-                </table>         
+                        {% endfor %}
+                    </tbody>
+                </table>
             </main>
         </div>
     </div>
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const scheduleHour = document.getElementById('scheduleHour');
+            const scheduleMinute = document.getElementById('scheduleMinute');
+            for (let i = 0; i < 24; i++) {
+                let option = new Option(i.toString().padStart(2, '0'), i);
+                scheduleHour.add(option);
+            }
+            for (let i = 0; i < 60; i++) {
+                let option = new Option(i.toString().padStart(2, '0'), i);
+                scheduleMinute.add(option);
+            }
+        
+            const startButtons = document.querySelectorAll('.start-mission');
+            startButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    console.log("Raw mission data:", this.getAttribute('data-mission'));
+                    window.currentMissionData = JSON.parse(this.getAttribute('data-mission'));
+                    window.currentMissionName = this.getAttribute('data-mission-name');
+                    window.currentPort = this.getAttribute('data-port');
+                    window.currentButton = button;
+        
+                    $('#startMissionModal').modal('show');
+                });
+            });
+        
+            document.getElementById('startMissionNow').addEventListener('click', function() {
+                startPredefinedMission(window.currentMissionData, window.currentMissionName, window.currentPort);
+                $('#startMissionModal').modal('hide');
+            });
+        
+            document.getElementById('scheduleMission').addEventListener('click', function() {
+                const hour = scheduleHour.value.padStart(2, '0');
+                const minute = scheduleMinute.value.padStart(2, '0');
+                window.currentButton.closest('tr').getElementsByTagName('td')[0].textContent = `Planlagt start kl. ${hour}:${minute}`;
+                $('#startMissionModal').modal('hide');
+            });
+        });
+        
+        function startPredefinedMission(missionData, missionName, port) {
+            const numericPort = parseInt(port, 10);
+            const apiUrl = `/start-mission?port=${numericPort}`;
 
-</body>
-</html>
+            missionData.mission_definition = missionData.mission_definition || {};
+            missionData.mission_definition.id = missionData.id;
+            missionData.mission_definition.name = missionName;
 
+            fetch(apiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
+                },
+                body: JSON.stringify(missionData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Prøv igjen.');
+                }
+                return response.json();
+            })
+            .then(data => {
+                document.getElementById('statusMessage').textContent = `Oppdraget har startet!`;
+                $('#statusModal').modal('show');
+                window.currentButton.closest('tr').style.display = 'none';
+            })
+            .catch((error) => {
+                console.error('Error starting mission:', error);
+                document.getElementById('statusMessage').textContent = 'Feil ved start av oppdrag: ' + error.message;
+                $('#statusModal').modal('show');
+            });
+        }
+
+        function selectAvailablePorts() {
+            const robotIds = ["00000000-0000-0000-0000-000000000000", "00000000-0000-0000-0000-000000000002", "00000000-0000-0000-0000-000000000003", "00000000-0000-0000-0000-000000000004", "00000000-0000-0000-0000-000000000005", "00000000-0000-0000-0000-000000000006"];
+            const availablePorts = [];
+            robotIds.forEach(id => {
+                const statusData = localStorage.getItem(`robot_status_${id}`);
+                const batteryData = localStorage.getItem(`robot_battery_${id}`);
+                if (statusData && batteryData) {
+                    const status = JSON.parse(statusData).robot_status;
+                    const batteryLevel = JSON.parse(batteryData).battery_level;
+                    if (status === 'available' && batteryLevel >= 60) {
+                        availablePorts.push(id);
+                    }
+                }
+            });
+            return availablePorts;
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const startButtons = document.querySelectorAll('.start-mission');
+            startButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const available = this.getAttribute('data-available') === 'true';
+                    const missionModal = $('#startMissionModal');
+                    const startButton = missionModal.find('#startMissionNow');
+                    const availabilityMessage = missionModal.find('#availabilityMessage');
+
+                    if (!available) {
+                        startButton.addClass('btn-warning').removeClass('btn-success').prop('disabled', true);
+                        availabilityMessage.text('Dette oppdraget kan ikke startes før kl 15:00.');
+                    } else {
+                        startButton.removeClass('btn-warning').addClass('btn-success').prop('disabled', false);
+                        availabilityMessage.empty();
+                    }
+
+                    window.currentMissionData = JSON.parse(this.getAttribute('data-mission'));
+                    window.currentMissionName = this.getAttribute('data-mission-name');
+                    window.currentPort = this.getAttribute('data-port');
+                    window.currentButton = this;
+
+                    missionModal.modal('show');
+                });
+            });
+        });
+
+        var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
+
+        socket.on('update_robot_status', function(msg) {
+            const data = JSON.parse(msg.data);
+            const isarId = msg.isar_id;
+            localStorage.setItem(`robot_status_${isarId}`, JSON.stringify(data));
+            document.querySelectorAll('.start-mission').forEach(button => {
+                const port = button.getAttribute('data-port');
+                const robotStatus = JSON.parse(localStorage.getItem(`robot_status_${port}`));
+                if (robotStatus.robot_status !== 'available') {
+                    button.classList.remove('btn-success');
+                    button.classList.add('btn-warning');
+                    button.disabled = true;
+                } else {
+                    button.classList.add('btn-success');
+                    button.classList.remove('btn-warning');
+                    button.disabled = false;
+                }
+            });
+        });
+
+        socket.on('update_battery', function(msg) {
+            const data = JSON.parse(msg.data);
+            const isarId = msg.isar_id;
+            localStorage.setItem(`robot_battery_${isarId}`, JSON.stringify(data));
+            document.querySelectorAll('.start-mission').forEach(button => {
+                const port = button.getAttribute('data-port');
+                const robotBattery = JSON.parse(localStorage.getItem(`robot_battery_${port}`));
+                const robotStatus = JSON.parse(localStorage.getItem(`robot_status_${port}`));
+                if (robotBattery.battery_level < 60 || robotStatus.robot_status !== 'available') {
+                    button.classList.remove('btn-success');
+                    button.classList.add('btn-warning');
+                    button.disabled = true;
+                } else {
+                    button.classList.add('btn-success');
+                    button.classList.remove('btn-warning');
+                    button.disabled = false;
+                }
+            });
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.edit-mission').forEach(button => {
+                button.addEventListener('click', function() {
+                    const missionId = this.getAttribute('data-id');
+                    const missionName = this.getAttribute('data-name');
+                    const status = this.getAttribute('data-status');
+                    const deadline = this.getAttribute('data-deadline');
+                    
+                    let deadlineDate = '';
+                    let deadlineTime = '';
+                    if (deadline) {
+                        const [date, time] = deadline.split(' ');
+                        deadlineDate = date;
+                        deadlineTime = time ? time.slice(0, 5) : '';
+                    }
+
+                    document.getElementById('editMissionId').value = missionId;
+                    document.getElementById('editMissionName').value = missionName;
+                    document.getElementById('editStatus').value = status;
+                    document.getElementById('editDeadlineDate').value = deadlineDate;
+                    document.getElementById('editDeadlineTime').value = deadlineTime;
+
+                    $('#editMissionModal').modal('show');
+                });
+            });
+        });
+
+
+        $(document).ready(function() {
+            $('#addMissionForm').on('submit', function(e) {
+                e.preventDefault();
+
+                var missionName = $('#MissionName').val();
+                var status = $('#Status').val();
+
+                var missionData = {
+                    "id": missionName,
+                    "tasks": [{
+                        "steps": [
+                            {
+                                "type": "drive_to_pose",
+                                "pose": {
+                                    "position": {"x": -2, "y": -2, "z": 0, "frame": "asset"},
+                                    "orientation": {"x": 0, "y": 0, "z": 0.4794255, "w": 0.8775826, "frame": "asset"},
+                                    "frame": "asset"
+                                }
+                            },
+                            {
+                                "type": "take_image",
+                                "target": {"x": 2, "y": 2, "z": 0, "frame": "robot"}
+                            }
+                        ]
+                    }]
+                };
+
+                $.ajax({
+                    type: "POST",
+                    url: "{{ url_for('missions.add_mission') }}",
+                    contentType: "application/json",
+                    data: JSON.stringify({
+                        csrf_token: $('input[name="csrf_token"]').val(),
+                        MissionName: missionName,
+                        MissionData: missionData,
+                        Status: status
+                    }),
+                    success: function(response) {
+                        location.reload();
+                    },
+                    error: function(response) {
+                        alert('Feil ved lagring av nytt oppdrag: ' + response.responseText);
+                    }
+                });
+            });
+        });
+
+
+    </script>                                        
+</table>         
+</main>
+</div>
+</div>
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         var inspectionList = document.getElementById('inspectionPoints');
@@ -419,6 +466,31 @@
             }
         });
     });
+    document.getElementById('makeAllMissionsAvailable').addEventListener('click', function() {
+        fetch('/make-all-missions-available', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
+            },
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Noe gikk galt. Prøv igjen.');
+            }
+            return response.json();
+        })
+        .then(data => {
+            location.reload();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Feil ved oppdatering av oppdrag: ' + error.message);
+        });
+    });
 </script>
+
+</body>
+</html>
 
 {% endblock %}

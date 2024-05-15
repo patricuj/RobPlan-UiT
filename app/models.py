@@ -24,6 +24,7 @@ class Notification(db.Model):
     Timestamp = db.Column(db.DateTime, nullable=False)
     IsRead = db.Column(db.Boolean, nullable=False, default=False)
     Users_idUser = db.Column(db.Integer, db.ForeignKey('Users.idUser'), nullable=False)
+    isar_id = db.Column(db.String(36), nullable=True)
 
 
 class Mission(db.Model):
@@ -34,3 +35,17 @@ class Mission(db.Model):
     MissionData = db.Column(db.Text, nullable=False)
     IsAvailable = db.Column(db.Boolean, nullable=False, default=True)
     Port = db.Column(db.Integer, nullable=False)
+    Status = db.Column(db.String(255), nullable=True, default='Ingen planlagt inspeksjon')
+    LastCompleted = db.Column(db.DateTime, nullable=True)
+    Deadline = db.Column(db.DateTime, nullable=True)
+
+
+class Result(db.Model):
+    __tablename__ = 'Results'
+
+    idResult = db.Column(db.Integer, primary_key=True)
+    MissionName = db.Column(db.String(255), nullable=False)
+    RobotName = db.Column(db.String(255), nullable=False)
+    Status = db.Column(db.String(50), nullable=False)
+    Timestamp = db.Column(db.DateTime, nullable=False)
+    Details = db.Column(db.Text, nullable=True)

@@ -10,8 +10,15 @@
 <body>
     <div class="container-fluid">
         <div class="row">
-            <nav class="col-md-2 d-none d-md-block sidebar">
+            <button class="btn btn-primary d-md-none" onclick="openNav()">
+                <i class="fas fa-bars"></i>
+            </button>
+            <nav id="mySidebar" class="sidebar">
+                <a href="javascript:void(0)" class="closebtn d-md-none" onclick="closeNav()">&times;</a>
                 <ul class="nav flex-column">
+                    <li class="nav-item logo-item">
+                        <img src="{{ url_for('static', filename='Logo.png') }}" alt="Logo" class="logo">
+                    </li>
                     <li class="nav-item">
                         <a class="nav-link active" href="#"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
                     </li>
@@ -50,27 +57,11 @@
                                 Oppdrag
                             </div>
                             <div class="card-body">
-                                <h5 class="card-title">3 aktive oppdrag</h5>
-                                <div class="oppdrag-liste">
-                                    <div class="oppdrag">
-                                        <div class="oppdrag-kolonne"><i class="fas fa-robot"></i> Placebot</div>
-                                        <div class="oppdrag-kolonne">Maintenance level 1</div>
-                                        <div class="oppdrag-kolonne" id="Placebot-time">Tid kjørt: 10 min 10 sek</div>
-                                    </div>                                    
-                                    <div class="oppdrag">
-                                        <div class="oppdrag-kolonne"><i class="fas fa-robot"></i> Placebot2</div>
-                                        <div class="oppdrag-kolonne">Base test</div>
-                                        <div class="oppdrag-kolonne" id="Placebot2-time">Tid kjørt: 46 min 30 sek</div>
-                                    </div>
-                                    <div class="oppdrag">
-                                        <div class="oppdrag-kolonne"><i class="fas fa-robot"></i> Placebot3</div>
-                                        <div class="oppdrag-kolonne">Maintenance level 2</div>
-                                        <div class="oppdrag-kolonne" id="Placebot3-time">Tid kjørt: 38 min 24 sek</div>
-                                    </div>
+                                <h5 class="card-title"><span id="active-missions-count">0</span> aktive oppdrag</h5>
+                                <div id="active-missions">
                                 </div>
                             </div>
                         </div>
-                    </div>
                         <div id='calendar'></div>
                         <div class="legend">
                             <div class="legend-item">
@@ -145,6 +136,60 @@
                 }
             });
 
+            socket.on('update_robot_status', function(msg) {
+                const data = JSON.parse(msg.data);
+                const isarId = msg.isar_id;
+                const robotStatus = data.robot_status;
+                const currentMission = data.current_mission_id;
+
+                updateMissionCard(isarId, data.robot_name, robotStatus, currentMission);
+            });
+
+            function updateMissionCard(isarId, robotName, robotStatus, currentMission) {
+                const missionContainer = document.getElementById('active-missions');
+                let missionCard = document.getElementById(`mission_${isarId}`);
+                
+                if (!missionCard && robotStatus === 'busy') {
+                    missionCard = document.createElement('div');
+                    missionCard.className = 'mission-card';
+                    missionCard.id = `mission_${isarId}`;
+                    missionContainer.appendChild(missionCard);
+                }
+
+                if (robotStatus === 'busy') {
+                    missionCard.innerHTML = `
+                        <img src="/static/turtlebotPi.jpg" alt="Robot Image">
+                        <div class="robot-name">${robotName}</div>
+                        <div class="current-mission">${currentMission}</div>
+                        <div class="timer" id="Mission-${isarId}-time">Tid kjørt: 0 min 0 sek</div>
+                    `;
+                    startMissionTimer(isarId);
+                    activeMissions[isarId] = true;
+                } else {
+                    if (missionCard) {
+                        missionCard.remove();
+                    }
+                    delete activeMissions[isarId];
+                }
+
+                document.getElementById('active-missions-count').textContent = Object.keys(activeMissions).length;
+            }
+
+            function startMissionTimer(missionId) {
+                if (!startTime[missionId]) {
+                    startTime[missionId] = 0;
+                }
+
+                setInterval(function() {
+                    const timeElement = document.getElementById(`Mission-${missionId}-time`);
+                    if (timeElement) {
+                        startTime[missionId] += 1;
+                        const minutes = Math.floor(startTime[missionId] / 60);
+                        const seconds = startTime[missionId] % 60;
+                        timeElement.innerHTML = 'Tid kjørt: ' + minutes + ' min ' + seconds + ' sek';
+                    }
+                }, 1000);
+            }
 
             function updateRobotPosition(isarId, robotName, x, y, z) {
                 var map = document.getElementById('map');
@@ -247,6 +292,14 @@
             });
             calendar.render();
         });
+
+        function openNav() {
+            document.getElementById("mySidebar").classList.add('show');
+        }
+
+        function closeNav() {
+            document.getElementById("mySidebar").classList.remove('show');
+        }
     </script>
 </body>
 </html>

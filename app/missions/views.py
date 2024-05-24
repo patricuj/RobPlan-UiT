@@ -1,19 +1,18 @@
 from flask import Blueprint, render_template, request, jsonify, json, redirect, flash, url_for
 import requests
 from . import missions_bp
-from ..models import Mission
+from ..models import Mission, RobotInfo
 from ..extensions import db
 import random
-import time
+
 @missions_bp.route('/missions')
 def missions():
+    update_mission_availability_based_on_battery()
+    
     all_missions = Mission.query.all()
     print("Sending missions data:", all_missions)
     return render_template('missions/missions.html', missions=all_missions)
 
-
-recent_ports = {}
-recent_calls = []
 
 def set_missions_availability(is_available):
     missions = Mission.query.all()
@@ -21,39 +20,64 @@ def set_missions_availability(is_available):
         mission.IsAvailable = is_available
     db.session.commit()
 
+def update_mission_availability_based_on_battery():
+    subquery = db.session.query(
+        RobotInfo.isar_id,
+        db.func.max(RobotInfo.id).label('max_id')
+    ).group_by(RobotInfo.isar_id).subquery()
+
+    latest_robot_info = db.session.query(
+        RobotInfo.isar_id, RobotInfo.battery_level, RobotInfo.robot_status
+    ).join(subquery, RobotInfo.id == subquery.c.max_id).all()
+
+
+    is_available = any(
+        robot_info.battery_level is not None and 
+        robot_info.battery_level > 60 and 
+        robot_info.robot_status != 'busy' 
+        for robot_info in latest_robot_info
+    )
+    if is_available:
+        make_all_missions_available()
+    else:
+        make_all_missions_unavailable()
+
+
+
+@missions_bp.route('/update-mission-availability', methods=['POST'])
+def update_mission_availability():
+    update_mission_availability_based_on_battery()
+    return jsonify({"message": "Mission availability updated based on robot battery levels"}), 200
+
 @missions_bp.route('/start-mission', methods=['POST'])
 def start_mission():
-    global recent_ports, recent_calls
-
-    current_time = time.time()
-    recent_calls.append(current_time)
-
-    recent_calls = [call for call in recent_calls if current_time - call <= 3]
-
-    if len(recent_calls) >= 1:
-        set_missions_availability(False)
-
-    
-    ports = [3000, 4000]
-    valid_ports = [port for port in ports if port not in recent_ports or (current_time - recent_ports[port] > 10)]
-
-    if not valid_ports:
-        return jsonify({"error": "No valid ports available. Please try again later."}), 503
-
-    port = random.choice(valid_ports)
-    recent_ports[port] = current_time
-
-    isar_api_url = f'http://localhost:{port}/schedule/start-mission'
     default_mission_data = request.json
 
+    subquery = db.session.query(
+        RobotInfo.isar_id,
+        db.func.max(RobotInfo.id).label('max_id')
+    ).group_by(RobotInfo.isar_id).subquery()
+
+    latest_robot_info = db.session.query(
+        RobotInfo.isar_id, RobotInfo.robot_name, RobotInfo.battery_level, RobotInfo.robot_status, RobotInfo.port
+    ).join(subquery, RobotInfo.id == subquery.c.max_id).all()
+
+    available_robot = next((robot for robot in latest_robot_info if robot.battery_level > 60 and robot.robot_status != 'busy'), None)
+
+    if not available_robot or not available_robot.port:
+        return jsonify({"error": "No available robot with sufficient battery, idle status, or valid port"}), 400
+
+    isar_api_url = f'http://localhost:{available_robot.port}/schedule/start-mission'
+    
     transformed_data = transform_mission_data(default_mission_data)
 
-    response = requests.post(isar_api_url, json=transformed_data)
+    try:
+        response = requests.post(isar_api_url, json=transformed_data)
+        response.raise_for_status()
+    except requests.exceptions.RequestException as e:
+        return jsonify({"error": "Failed to start mission", "details": str(e)}), 500
     
-    if response.status_code == 200:
-        return jsonify({"message": "Mission successfully started", "data": response.json()}), 200
-    else:
-        return jsonify({"error": "Failed to start mission", "details": response.text}), response.status_code
+    return jsonify({"message": "Mission successfully started", "data": response.json()}), 200
 
 
 def transform_mission_data(default_mission_data):
@@ -100,41 +124,6 @@ def transform_mission_data(default_mission_data):
             "frame_name": "robot"
         }
     }
-
-
-
-
-@missions_bp.route('/schedule/stop-mission', methods=['POST'])
-def stop_mission():
-    isar_api_url = 'http://localhost:3000/schedule/stop-mission'
-    response = requests.post(isar_api_url)
-
-    if response.status_code == 200:
-        return jsonify({"message": "Oppdrag stoppet"}), 200
-    else:
-        return jsonify({"error": "Kunne ikke stoppe oppdraget", "details": response.text}), response.status_code
-
-@missions_bp.route('/schedule/pause-mission', methods=['POST'])
-def pause_mission():
-    isar_api_url = 'http://localhost:3000/schedule/pause-mission'
-    response = requests.post(isar_api_url)
-    
-    if response.status_code == 200:
-        return jsonify({"message": "Oppdrag er pauset"}), 200
-    else:
-        return jsonify({"error": "Kunne ikke pause oppdraget",
-                        "details": response.text}), response.status_code
-
-
-@missions_bp.route('/schedule/resume-mission', methods=['POST'])
-def resume_mission():
-    isar_api_url = 'http://localhost:3000/schedule/resume-mission'
-    response = requests.post(isar_api_url)
-    
-    if response.status_code == 200:
-        return jsonify({"message": "Oppdrag er gjenopptatt"}), 200
-    else:
-        return jsonify({"error": "Kunne ikke gjenoppta oppdraget", "details": response.text}), response.status_code
 
 
 @missions_bp.route('/add-mission', methods=['POST'])
@@ -187,8 +176,6 @@ def add_mission():
     flash('Nytt oppdrag lagt til!', 'success')
     return redirect(url_for('missions.missions'))
 
-
-
 @missions_bp.route('/delete-mission/<int:mission_id>', methods=['POST'])
 def delete_mission(mission_id):
     mission = Mission.query.get_or_404(mission_id)
@@ -225,11 +212,13 @@ def edit_mission():
 
     return redirect(url_for('missions.missions'))
 
-
 @missions_bp.route('/make-all-missions-available', methods=['POST'])
 def make_all_missions_available():
-    missions = Mission.query.all()
-    for mission in missions:
-        mission.IsAvailable = True
-    db.session.commit()
+    set_missions_availability(True)
     return jsonify({"message": "Alle oppdrag er nå tilgjengelige"}), 200
+
+@missions_bp.route('/make-all-missions-unavailable', methods=['POST'])
+def make_all_missions_unavailable():
+    print("make_all_missions_unavailable function called")
+    set_missions_availability(False)
+    return jsonify({"message": "Alle oppdrag er nå utilgjengelige"}), 200

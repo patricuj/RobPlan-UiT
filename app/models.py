@@ -49,3 +49,15 @@ class Result(db.Model):
     Status = db.Column(db.String(50), nullable=False)
     Timestamp = db.Column(db.DateTime, nullable=False)
     Details = db.Column(db.Text, nullable=True)
+
+
+class RobotInfo(db.Model):
+    __tablename__ = 'RobotInfo'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    isar_id = db.Column(db.String(36), nullable=False)
+    robot_name = db.Column(db.String(50), nullable=False)
+    battery_level = db.Column(db.Float)
+    robot_status = db.Column(db.String(20))
+    current_mission_id = db.Column(db.String(50))
+    port = db.Column(db.Integer)

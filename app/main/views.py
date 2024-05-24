@@ -10,8 +10,3 @@ def index():
 @login_required
 def home():
     return render_template('/main/home.html', user=current_user)
-
-@main.route('/robot_status/<isar_id>')
-@login_required
-def robot_status(isar_id):
-    return render_template('/robot_status/robot_status.html', isar_id=isar_id)

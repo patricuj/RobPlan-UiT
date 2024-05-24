@@ -88,6 +88,23 @@ CREATE TABLE IF NOT EXISTS `myDb`.`Results` (
   PRIMARY KEY (`idResult`)
 ) ENGINE = InnoDB;
 
+-- -----------------------------------------------------
+-- Table `myDb`.`RobotInfo`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `myDb`.`RobotInfo`;
+
+CREATE TABLE IF NOT EXISTS `RobotInfo` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `isar_id` VARCHAR(36) NOT NULL,
+  `robot_name` VARCHAR(255) NOT NULL,
+  `battery_level` FLOAT,
+  `robot_status` VARCHAR(255),
+  `current_mission_id` VARCHAR(255),
+  `port` INT,
+  PRIMARY KEY (`id`)
+) ENGINE = InnoDB;
+
+
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;

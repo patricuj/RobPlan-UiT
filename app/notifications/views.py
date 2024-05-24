@@ -14,7 +14,7 @@ def notifications():
 
     for notification in user_notifications:
         if notification.isar_id:
-            notification.status_url = url_for('main.robot_status', isar_id=notification.isar_id)
+            notification.status_url = url_for('robot_status.robot_status', isar_id=notification.isar_id)
         else:
             notification.status_url = None
 

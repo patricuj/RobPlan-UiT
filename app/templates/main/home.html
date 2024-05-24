@@ -3,6 +3,10 @@
 <!DOCTYPE html>
 <html lang="no">
 <head>
+    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.css' rel='stylesheet' />
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.js'></script>
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/locales-all.min.js'></script>
+</head>
 <body>
     <div class="container-fluid">
         <div class="row">
@@ -33,12 +37,12 @@
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="/"><i class="fas fa-sign-out-alt"></i> Logg Ut</a>
-                    </li>                                     
+                    </li>
                 </ul>
             </nav>
             <main role="main" class="col-md-10 ml-sm-auto col-lg-10 px-4">
                 <br><br>
-                <h1>Velkommen, Alise</h1>
+                <h1>Velkommen, {{ user.Username }}</h1>
                 <div class="row">
                     <div class="col-md-6">
                         <div class="card">
@@ -67,19 +71,32 @@
                             </div>
                         </div>
                     </div>
+                        <div id='calendar'></div>
+                        <div class="legend">
+                            <div class="legend-item">
+                                <span></span> Siste frist for å utføre oppdraget
+                            </div>
+                        </div>
+                        <div id="eventList" class="card">
+                            <div class="card-header">
+                                Oppdrag med frist denne dagen
+                            </div>
+                            <div class="card-body">
+                                <ul id="eventListItems"></ul>
+                            </div>
+                        </div>
+                    </div>
                     <div class="col-md-6">
                         <div class="card">
                             <div class="card-header">
-                            Anleggsoversikt
+                                Anleggsoversikt
                             </div>
                             <div class="card-body">
-                                </div>
                                 <div id="robot-positions-container"></div>
                                 <div id="map" style="position: relative; width: 842px; height: 851px; background-image: url('/static/Facility_map.png');"></div>
-
                             </div>
                         </div>
-                    </div>                
+                    </div>
                 </div>
             </main>
         </div>
@@ -91,11 +108,12 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
+            var activeMissions = {};
             var startTime = {
-            'Placebot': 10 * 61,
-            'Placebot2': 45 * 62,
-            'Placebot3': 36 * 64 
-        };
+                'Placebot': 10 * 61,
+                'Placebot2': 45 * 62,
+                'Placebot3': 36 * 64 
+            };
 
             setInterval(function() {
                 Object.keys(startTime).forEach(function(robot) {
@@ -166,12 +184,68 @@
                 robotNameElement.style.top = `${yPos + 15}px`;
             }
 
-
-            function updateRobotInfo(robotName, heartbeat, position) {
+            function updateRobotInfo(robotName, heartbeat) {
                 var infoElement = document.getElementById('robot-info');
                 infoElement.innerHTML = 'Robot: ' + robotName + '<br>' + 'Hjerteslag: ' + heartbeat;
             }
 
+            var calendarEl = document.getElementById('calendar');
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                locale: 'no',
+                height: 'auto',
+                events: [
+                    {% for mission in missions %}
+                    {
+                        title: '{{ mission.MissionName }}',
+                        start: '{{ mission.Deadline }}'
+                    },
+                    {% endfor %}
+                ],
+                dateClick: function(info) {
+                    var events = calendar.getEvents().filter(event => {
+                        return event.start.toISOString().split('T')[0] === info.dateStr;
+                    });
+
+                    var eventList = document.getElementById('eventList');
+                    var eventListItems = document.getElementById('eventListItems');
+                    eventListItems.innerHTML = '';
+
+                    if (events.length > 0) {
+                        var primaryEvent = events[0];
+                        var listItem = document.createElement('li');
+                        listItem.textContent = primaryEvent.title + ' ' + primaryEvent.start.toTimeString().split(' ')[0];
+                        eventListItems.appendChild(listItem);
+
+                        eventList.style.display = 'block';
+                    } else {
+                        eventList.style.display = 'none';
+                    }
+                },
+                eventClick: function(info) {
+                    var events = calendar.getEvents().filter(event => {
+                        return event.start.toISOString().split('T')[0] === info.event.start.toISOString().split('T')[0];
+                    });
+
+                    var eventList = document.getElementById('eventList');
+                    var eventListItems = document.getElementById('eventListItems');
+                    eventListItems.innerHTML = '';
+
+                    if (events.length > 0) {
+                        events.forEach(event => {
+                            var listItem = document.createElement('li');
+                            listItem.textContent = event.title + ' ' + event.start.toTimeString().split(' ')[0];
+                            eventListItems.appendChild(listItem);
+                        });
+
+                        eventList.style.display = 'block';
+                    } else {
+                        eventList.style.display = 'none';
+                    }
+                    document.querySelector('#eventList .card-header').textContent = 'Oppdrag med frist ' + info.event.start.toISOString().split('T')[0] + ':';
+                },
+            });
+            calendar.render();
         });
     </script>
 </body>

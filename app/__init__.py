@@ -1,4 +1,5 @@
 from flask import Flask
+from flask_cors import CORS
 from .mqtt_client import MQTTClient
 from config import Config
 from .models import User 
@@ -15,6 +16,8 @@ def create_app():
     socketio.init_app(app, cors_allowed_origins="*")
     csrf.init_app(app)
     moment.init_app(app)
+
+    CORS(app, resources={r"/*": {"origins": "*"}})
 
     login_manager.login_view = 'auth.login'
 

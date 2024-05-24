@@ -17,11 +17,50 @@
             padding-top: 2rem;
         }
         .sidebar {
-            padding: 2rem 0;
-            height: 100vh;
-            overflow-y: auto;
-            background-color: #222;
+            height: 100%;
+            width: 250px;
+            position: fixed;
+            z-index: 1000;
+            top: 0;
+            left: -250px;
+            overflow-x: hidden;
+            transition: 0.3s;
+            padding-top: 60px;
         }
+
+        .sidebar .closebtn {
+            position: absolute;
+            top: 0;
+            right: 25px;
+            font-size: 36px;
+            margin-left: 50px;
+        }
+
+        #main {
+            transition: margin-left .3s;
+            padding: 16px;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                left: -250px;
+            }
+
+            .sidebar.show {
+                left: 0;
+            }
+        }
+
+        @media (min-width: 769px) {
+            .sidebar {
+                left: 0;
+            }
+
+            #main {
+                margin-left: 250px;
+            }
+        }
+
         .nav-link {
             color: #fff;
             background-color: #333;
@@ -33,7 +72,8 @@
             margin-top: auto;
         }
         .nav-link.active {
-            background-color: #555;
+            background-color: var(--active-nav-link-bg);
+            color: var(--active-nav-link-color);
         }
         .oppdrag-liste {
             display: flex;
@@ -107,17 +147,20 @@
             color: #00ce67;
         }
         .modal-content {
-            background-color: #333;
-            color: #fff;
+            background-color: var(--modal-bg-color);
+            color: var(--modal-text-color);
         }
+
         .modal-header, .modal-body, .modal-footer {
-            border-color: #444;
+            border-color: var(--modal-border-color);
         }
+
         .close {
-            color: #fff;
+            color: var(--modal-close-color);
         }
+
         .close:hover {
-            color: #999;
+            color: var(--modal-close-hover-color);
         }
         @media (min-width: 992px) {
             .modal-lg, .modal-xl {
@@ -339,9 +382,275 @@
         }
 
 
+        .notification-item:hover {
+            background-color: #f8f8f859;
+        }
+
+        .light-mode {
+            color: #333;
+            background-color: #dae0e6;
+            --table-bg: #ffffff;
+            --table-color: #212529;
+            --header-bg: #f8f9fa;
+            --header-color: #333;
+            --link-color: #007bff;
+            --link-hover-color: #0056b3;
+            --nav-bg-color: #dae0e6;
+            --nav-text-color: #121212;
+            --nav-item-bg-color: #dae0e6; 
+            --active-nav-link-bg: #9b9999;
+            --nav-link-bg: #e9ecef;
+            --card-bg-color: #ffffff;
+            --card-text-color: #333;
+            --modal-bg-color: #ffffff;
+            --modal-text-color: #333;
+            --modal-border-color: #ccc;
+            --modal-close-color: #333;
+            --modal-close-hover-color: #000;
+        }
+
+        .table-light {
+            background-color: var(--table-bg);
+            color: var(--table-color);
+        }
+
+        .table-light thead {
+            background-color: var(--header-bg);
+            color: var(--header-color);
+        }
+
+
+        :root {
+            --background-color: #121212;
+            --text-color: #fff;
+            --nav-bg-color: #121212; 
+            --nav-text-color: #fff;
+            --nav-item-bg-color: #222;
+            --active-nav-link-bg: #555555;
+            --active-nav-link-color: #fff;
+            --nav-link-bg: #333;
+            --card-bg-color: #333;
+            --card-text-color: #fff;
+            --modal-bg-color: #333; 
+            --modal-text-color: #fff;
+            --modal-border-color: #444;
+            --modal-close-color: #fff;
+            --modal-close-hover-color: #999;
+        }
+
+        .mission-card {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: var(--card-bg-color);
+            color: var(--card-text-color);
+        }
+
+        .mission-card img {
+            width: 50px;
+            height: 50px;
+            margin-right: 10px;
+        }
+
+        .mission-card .robot-name {
+            font-weight: bold;
+            margin-right: 20px;
+        }
+
+        .mission-card .timer {
+            margin-left: auto;
+        }
+
+
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+
+        .sidebar {
+            background-color: var(--nav-bg-color);
+            color: var(--nav-text-color);
+        }
+
+        a {
+            color: var(--link-color);
+        }
+
+        a:hover {
+            color: var(--link-hover-color);
+        }
+
+        .light-mode .notification-item {
+            background-color: #6462c4;
+            color: #0e0202;
+        }
+
+        .light-mode .card,
+        .light-mode .card-header,
+        .light-mode .card-body,
+        .light-mode .card-title,
+        .light-mode .card-text {
+            background-color: #ffffff;
+            color: #333 !important;
+        }
 
 
 
+        .nav-item {
+            background-color: var(--nav-item-bg-color);
+        }
+
+        .nav-link {
+            background-color: var(--nav-link-bg);
+            color: var(--nav-link-color);
+            margin-bottom: 0.5rem;
+            border-radius: 0.25rem;
+            padding: 40px 50px;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: var(--nav-text-color);
+        }
+
+        body, .nav-link, .nav-item, .sidebar, .notification-item, .alert, .btn {
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .theme-switch-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+            margin: 20px;
+            justify-content: flex-end;
+        }
+
+
+        .theme-label {
+            color: #aaa;
+            font-weight: normal;
+            transition: color 0.3s ease;
+        }
+
+        .theme-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .theme-switch input {
+            display: none;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #f1c40f;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #4a69bd;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        .icon {
+            display: block;
+            position: absolute;
+            color: white;
+            top: 50%;
+            transform: translateY(-50%);
+            transition: opacity 0.3s ease;
+        }
+
+        .sun {
+            left: 6px;
+            opacity: 0;
+        }
+
+        .moon {
+            right: 6px;
+            opacity: 1;
+        }
+
+        input:checked ~ .slider .sun {
+            opacity: 1;
+        }
+
+        input:checked ~ .slider .moon {
+            opacity: 0;
+        }
+
+        #light-label, #dark-label {
+            transition: color 0.3s ease;
+            font-weight: bold;
+        }
+
+        #dark-label {
+            color: #fff;
+        }
+
+        #light-label {
+            color: #333;
+        }
+
+        input:checked ~ #dark-label {
+            color: #fff;
+            opacity: 1;
+        }
+
+        input:not(:checked) ~ #light-label {
+            color: #333;
+            opacity: 1;
+        }
+
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+        }
+
+ 
+
+        .logo-item {
+            text-align: center;
+            padding: 20px 0;
+            margin-bottom: 20px;
+            background: none;
+        }
+
+        .logo {
+            width: 200px;
+            height: auto;
+            background: none;
+            display: block;
+            margin: 0 auto;
+        }
 
 
 
@@ -408,6 +717,18 @@
     </style>
 </head>
 <body>
+        <div class="theme-switch-wrapper">
+            <span id="light-label" class="theme-label">Lys</span>
+            <label class="theme-switch" for="theme-toggle">
+                <input type="checkbox" id="theme-toggle">
+                <div class="slider round">
+                    <span class="icon moon"><i class="fas fa-sun"></i></span>
+                    <span class="icon sun"><i class="fas fa-moon"></i></span>
+                </div>
+            </label>
+            <span id="dark-label" class="theme-label">Mørk</span>
+        </div>
+    </div>
     <div id="global-alert" class="alert alert-warning" style="display: none;">
         <button type="button" class="close" onclick="closeAlert()">&times;</button>
         <span id="alert-msg"></span>
@@ -466,6 +787,30 @@
                 alertBox.style.display = 'block';
                 document.getElementById('alert-msg').textContent = message;
             }
+        });
+
+        document.addEventListener("DOMContentLoaded", function() {
+            const themeToggleButton = document.getElementById('theme-toggle');
+            const bodyElement = document.body;
+            const isDarkMode = localStorage.getItem('theme') === 'dark';
+            const tableElements = document.querySelectorAll('.table');
+
+            themeToggleButton.checked = isDarkMode;
+            updateTheme();
+
+            function updateTheme() {
+                const isDarkMode = themeToggleButton.checked;
+                bodyElement.classList.toggle('light-mode', !isDarkMode);
+                localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+                document.getElementById('dark-label').style.opacity = isDarkMode ? 1 : 0.5;
+                document.getElementById('light-label').style.opacity = isDarkMode ? 0.5 : 1;
+                
+                tableElements.forEach(table => {
+                    table.classList.toggle('table-light', !isDarkMode);
+                });
+            }
+
+            themeToggleButton.addEventListener('change', updateTheme);
         });
     </script>         
 </body>

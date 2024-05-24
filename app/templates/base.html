@@ -272,6 +272,13 @@
             border: 1px solid #444;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
             animation: fadeIn 0.5s;
+            position: fixed;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1050;
+            width: 70%;
+            box-sizing: border-box;
         }
 
         @keyframes fadeIn {
@@ -322,18 +329,90 @@
             background-color: #46719bc2;
         }
 
-        
+        .status-completed {
+            color: white;
+            background-color: rgb(115, 172, 115);
+        }
+        .status-failed {
+            color: white;
+            background-color: rgb(204, 72, 72);
+        }
 
+
+
+
+
+
+
+
+        .legend .badge {
+            font-size: 0.8em;
+        }
+
+        #calendar {
+            margin-top: 20px;
+        }
+        .legend {
+            margin-top: 10px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        .legend-item span {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            background-color: rgb(41, 123, 190);
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        #eventList {
+            margin-top: 20px;
+            display: none;
+        }
+        #eventList ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        #eventList li {
+            margin-bottom: 10px;
+        }
+
+        .badge-success-button {
+            background-color: #28a745;
+            color: #000;
+            border: none;
+            padding: 0.25em 0.4em;
+            font-size: 75%;
+            font-weight: 700;
+            line-height: 1;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: baseline;
+            border-radius: 0.25rem;
+            display: inline-block;
+        }
+        .text-success {
+        color: green;
+        }
+        .text-danger {
+            color: red;
+        }
+        .text-warning {
+            color: orange;
+        }
 
 
     </style>
 </head>
 <body>
-   <div id="global-alert" class="alert alert-warning" style="display: none;">
+    <div id="global-alert" class="alert alert-warning" style="display: none;">
         <button type="button" class="close" onclick="closeAlert()">&times;</button>
         <span id="alert-msg"></span>
-    </div> 
-
+    </div>
+    
     {% block content %}
     {% endblock %}
 
@@ -354,14 +433,18 @@
                 showAlert(`${msg.robot_name} har fullført oppdraget ${msg.mission_id}!`, msg.severity);
             });
 
-            
+
+            socket.on('mission_failed', function(msg) {
+                showAlert(`${msg.robot_name} mislyktes med oppdraget ${msg.mission_id}!`, msg.severity);
+            });
+
             window.closeAlert = function() {
                 var alertBox = document.getElementById('global-alert');
                 alertBox.style.display = 'none';
                 console.log("Alert closed");
             }
         
-            function showAlert(message, severity) {
+            function showAlert(message, severity, url = '') {
                 fetch('/notifications/create_notification', {
                     method: 'POST',
                     headers: {
@@ -371,6 +454,9 @@
                 });
 
                 var alertBox = document.getElementById('global-alert');
+                alertBox.onclick = function() {
+                    if(url) window.location.href = url;
+                };
                 alertBox.classList.remove('alert-severity-low', 'alert-severity-high');
                 if (severity === 'High') {
                     alertBox.classList.add('alert-severity-high');

@@ -13,7 +13,6 @@ def login():
 
         if user and check_password_hash(user.Password, password):
             login_user(user)
-            flash('Innlogging vellykket!', 'success')
             next_page = request.args.get('next')
             return redirect(next_page or url_for('auth.home'))
         else:

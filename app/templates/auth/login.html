@@ -3,32 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Velkommen til TurtleInsight</title>
+    <title>Velkommen til ROBPLAN INSIGHT</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <style>
         html, body {
             height: 100%;
             margin: 0;
+            font-family: 'Arial', sans-serif;
         }
         body {
             background: url("{{ url_for('static', filename='robot.jpg') }}") no-repeat center center fixed;
             background-size: cover;
             display: flex;
             justify-content: center;
-            padding-top: 10%;
-            padding-bottom: 10%;
+            align-items: center;
+            overflow: hidden;
         }
         .login-container {
-            background-color: #343a40;
+            background-color: rgba(52, 58, 64, 0.9);
             padding: 2rem;
             border-radius: 0.5rem;
             width: 100%;
             max-width: 400px;
             color: white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            animation: fadeIn 1.5s ease;
         }
         .login-container h2 {
             font-style: italic;
             margin-top: 0;
+            text-align: center;
         }
         .login-container .form-group label {
             float: left;
@@ -45,12 +51,55 @@
         }
         .form-group {
             margin-bottom: 1rem;
+            position: relative;
+        }
+        .form-group .fa-eye, .form-group .fa-eye-slash {
+            position: absolute;
+            top: 50%;
+            right: 10px;
+            transform: translateY(0%);
+            cursor: pointer;
+            color: #6c757d;
+            font-size: 1.5rem;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .logo-container {
+            background-color: white;
+            padding: 10px;
+            border-radius: 10px;
+            margin: 0 auto 1rem;
+            text-align: center;
+        }
+        .logo {
+            max-width: 150px;
         }
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <h2 class="text-center">Velkommen til TurtleInsight</h2>
+    <div class="login-container animate__animated animate__fadeIn">
+        <div class="logo-container">
+            <img src="{{ url_for('static', filename='Logo1.png') }}" alt="Logo" class="logo">
+        </div>
+        <h2 class="text-center">Velkommen til ROBPLAN INSIGHT</h2>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    {{ messages[0][1] }}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            {% endif %}
+        {% endwith %}
         <form action="{{ url_for('auth.login') }}" method="post">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
             <div class="form-group">
@@ -60,10 +109,26 @@
             <div class="form-group">
                 <label for="password">Passord</label>
                 <input type="password" class="form-control" id="password" name="password" autocomplete="off" required aria-label="Passord">
+                <i class="fas fa-eye" id="togglePassword" onclick="togglePassword()"></i>
             </div>
             <button type="submit" class="btn btn-light login-btn">Logg inn</button>
         </form>        
     </div>
+    <script>
+        function togglePassword() {
+            var passwordField = document.getElementById("password");
+            var toggleIcon = document.getElementById("togglePassword");
+            if (passwordField.type === "password") {
+                passwordField.type = "text";
+                toggleIcon.classList.remove("fa-eye");
+                toggleIcon.classList.add("fa-eye-slash");
+            } else {
+                passwordField.type = "password";
+                toggleIcon.classList.remove("fa-eye-slash");
+                toggleIcon.classList.add("fa-eye");
+            }
+        }
+    </script>
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>

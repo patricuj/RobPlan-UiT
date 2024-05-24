@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}Rapport for {{ report_data.mission_name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <div class="card-header">
+            <h2>Rapport for ikke fullført oppdrag: {{ report_data.mission_name }}</h2>
+            <h6 class="text-muted">ID: {{ report_data.mission_id }}</h6>
+        </div>
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h4>OPPDRAGSDETALJER</h4>
+                    <p><strong>Operatør:</strong> Dennis Mai</p>
+                    <p><strong>Robot:</strong> {{ report_data.robot_name }}</p>
+                    <p><strong>Status:</strong> {{ report_data.status }}</p>
+                    <p><strong>Tidspunkt:</strong> {{ report_data.timestamp }}</p>
+                    <p><strong>Detaljer:</strong> {{ report_data.details }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <a href="{{ url_for('history.history') }}" class="btn btn-secondary mt-4">Tilbake</a>
+</div>
+{% endblock %}

@@ -3,6 +3,7 @@ import json
 from flask import render_template, abort
 from . import report_bp
 from datetime import datetime, timedelta
+from ..models import Result
 
 
 @report_bp.route('/report/<int:result_id>')
@@ -53,3 +54,19 @@ def show_report(result_id):
             return render_template('report/report.html', report_data=report_data, result_id=result_id)
     except FileNotFoundError:
         abort(404)
+
+@report_bp.route('/report/failed/<int:result_id>')
+def show_failed_report(result_id):
+    result = Result.query.get(result_id)
+    if not result:
+        abort(404)
+    
+    report_data = {
+        "mission_id": result.idResult,
+        "mission_name": result.MissionName,
+        "robot_name": result.RobotName,
+        "status": result.Status,
+        "timestamp": result.Timestamp.strftime('%Y-%m-%d %H:%M:%S'),
+        "details": result.Details
+    }
+    return render_template('report/failed_report.html', report_data=report_data, result_id=result_id)

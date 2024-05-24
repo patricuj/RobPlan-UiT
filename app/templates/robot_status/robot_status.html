@@ -82,378 +82,312 @@
                 <ul class="nav flex-column">
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('main.index') }}"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active" href="{{ url_for('robot_fleet.robot_fleet') }}"><i class="fas fa-ship"></i> Flåteoversikt</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('missions.missions') }}"><i class="fas fa-briefcase"></i> Oppdrag</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('history.history') }}"><i class="fas fa-history"></i> Historikk</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('notifications.notifications') }}">
-                            <i class="fas fa-bell"></i> Notifikasjoner
-                            {% if unread_count > 0 %}
-                                <span class="unread-count">{{ unread_count }}</span>
-                            {% endif %}
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('settings.settings') }}"><i class="fas fa-cog"></i> Innstillinger</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/"><i class="fas fa-sign-out-alt"></i> Logg Ut</a>
-                    </li>                                     
-                </ul>
-            </nav>
-            <main role="main" class="col-md-10 ml-sm-auto col-lg-10 px-4 py-4">
-                <h2 id="robot-name-header" class="mb-4">Robotstatus</h2>
-                <div id="robot-container" class="mb-4"></div>
-                
-                <div class="card mb-4">
-                    <div class="card-header">Oppdragskontroller</div>
-                    <div class="card-body d-flex justify-content-around flex-wrap">
-                        <button class="btn btn-primary mb-2" id="resume">Fortsett oppdrag</button>
-                        <button class="btn btn-primary mb-2" id="pause">Pause oppdrag</button>
-                        <button class="btn btn-danger mb-2" id="stop">Stopp oppdrag</button>
-                        <button class="btn btn-secondary mb-2" id="replan">Replanlegg oppdrag</button>
-                    </div>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="{{ url_for('robot_fleet.robot_fleet') }}"><i class="fas fa-ship"></i> Flåteoversikt</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('missions.missions') }}"><i class="fas fa-briefcase"></i> Oppdrag</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('history.history') }}"><i class="fas fa-history"></i> Historikk</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('notifications.notifications') }}">
+                        <i class="fas fa-bell"></i> Notifikasjoner
+                        {% if unread_count > 0 %}
+                            <span class="unread-count">{{ unread_count }}</span>
+                        {% endif %}
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('settings.settings') }}"><i class="fas fa-cog"></i> Innstillinger</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/"><i class="fas fa-sign-out-alt"></i> Logg Ut</a>
+                </li>                                     
+            </ul>
+        </nav>
+        <main role="main" class="col-md-10 ml-sm-auto col-lg-10 px-4 py-4">
+            <h2 id="robot-name-header" class="mb-4">Robotstatus</h2>
+            <div id="robot-container" class="mb-4"></div>
+            
+            <div class="card mb-4">
+                <div class="card-header">Oppdragskontroller</div>
+                <div class="card-body d-flex justify-content-around flex-wrap">
+                    <button class="btn btn-primary mb-2" id="resume">Fortsett oppdrag</button>
+                    <button class="btn btn-primary mb-2" id="pause">Pause oppdrag</button>
+                    <button class="btn btn-danger mb-2" id="stop">Stopp oppdrag</button>
+                    <button class="btn btn-secondary mb-2" id="replan">Replanlegg oppdrag</button>
                 </div>
+            </div>
+            <div class="card">
+                <div class="card-header">Fullførte Oppdrag</div>
+                <div class="card-body p-0">
+                    <table class="table mb-0">
+                        <thead>
+                            <tr>
+                                <th style="color: white;">Oppdragsnavn</th>
+                                <th style="color: white;">Tid Fullført</th>
+                            </tr>
+                        </thead>
+                        <tbody id="completed-missions" style="color: white;">
+                        </tbody>                                    
+                    </table>
+                </div>
+            </div>
+            <div class="col-md-4">
                 <div class="card">
-                    <div class="card-header">Fullførte Oppdrag</div>
+                    <div class="card-header">Robotposisjon</div>
                     <div class="card-body p-0">
-                        <table class="table mb-0">
-                            <thead>
-                                <tr>
-                                    <th style="color: white;">Oppdragsnavn</th>
-                                    <th style="color: white;">Tid Fullført</th>
-                                </tr>
-                            </thead>
-                            <tbody id="completed-missions" style="color: white;">
-                            </tbody>                                    
-                        </table>
+                        <div id="map" style="position: relative; width: 100%; height: 600px; background-image: url('/static/Facility_map.png'); background-size: cover; background-position: center;"></div>
                     </div>
                 </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const isarId = "{{ isar_id }}";
+
+        fetch(`/api/robot_info/${isarId}`)
+            .then(response => response.json())
+            .then(robotData => {
+                if (robotData.error) {
+                    console.error(robotData.error);
+                    return;
+                }
+
+                if (!robotData.port) {
+                    console.error('Port is not defined for the robot:', robotData);
+                    return;
+                }
+
+                createRobotCard(robotData.isar_id, robotData.robot_name, robotData);
+
+                const csrfToken = document.querySelector('input[name="csrf_token"]').value;
+                document.getElementById('stop').addEventListener('click', function() {
+                    handleMissionControl(`/api/robot/${isarId}/stop`, 'Oppdrag stoppet vellykket.', csrfToken);
+                });
+
+                document.getElementById('pause').addEventListener('click', function() {
+                    handleMissionControl(`/api/robot/${isarId}/pause`, 'Oppdraget er satt på pause.', csrfToken);
+                });
+
+                document.getElementById('resume').addEventListener('click', function() {
+                    handleMissionControl(`/api/robot/${isarId}/resume`, 'Oppdraget fortsetter.', csrfToken);
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching robot info:', error);
+            });
+
+        var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
+
+        socket.on('update_robot_heartbeat', function(msg) {
+            const data = JSON.parse(msg.data);
+            if (msg.isar_id === isarId) {
+                localStorage.setItem(`robot_heartbeat_${isarId}`, JSON.stringify(data));
+                updateRobotCard(isarId, 'heartbeat', data);
+            }
+        });
+
+        socket.on('update_robot_status', function(msg) {
+            const data = JSON.parse(msg.data);
+            if (msg.isar_id === isarId) {
+                localStorage.setItem(`robot_status_${isarId}`, JSON.stringify(data));
+                updateRobotCard(isarId, 'status', data);
+            }
+        });
+
+        socket.on('update_battery', function(msg) {
+            const data = JSON.parse(msg.data);
+            if (msg.isar_id === isarId) {
+                localStorage.setItem(`robot_battery_${isarId}`, JSON.stringify(data));
+                updateRobotCard(isarId, 'battery', data);
+            }
+        });
+
+        socket.on('remove_robot_card', function(msg) {
+            const isarId = msg.isar_id;
+            if (isarId === isarId) {
+                const robotCard = document.getElementById(`robot_card_${isarId}`);
+                if (robotCard) {
+                    robotCard.remove();
+                }
+            }
+        });
+
+        function updateRobotCard(isarId, infoType, data) {
+            let robotCard = document.getElementById(`robot_card_${isarId}`);
+            if (!robotCard) {
+                createRobotCard(isarId, data.robot_name, data);
+                robotCard = document.getElementById(`robot_card_${isarId}`);
+            }
+
+            const statusElement = robotCard.querySelector('.status');
+            const batteryElement = robotCard.querySelector('.progress-bar');
+            const taskElement = robotCard.querySelector('.task');
+
+            const batteryData = JSON.parse(localStorage.getItem(`robot_battery_${isarId}`)) || {};
+            const batteryLevel = data.battery_level !== undefined ? data.battery_level : (batteryData.battery_level || 0);
+
+            if (infoType === 'status' || infoType === 'battery') {
+                const statusText = translateStatus(data.robot_status, batteryLevel);
+                statusElement.textContent = `Status: ${statusText}`;
+                statusElement.classList.remove('text-success', 'text-danger', 'text-warning');
+
+                if (statusText === 'Tilgjengelig') {
+                    statusElement.classList.add('text-success');
+                } else if (statusText === 'Opptatt i et oppdrag') {
+                    statusElement.classList.add('text-danger');
+                } else if (statusText === 'Ikke tilgjengelig (Må lades før oppdrag)') {
+                    statusElement.classList.add('text-warning');
+                }
+
+                if (infoType === 'battery') {
+                    batteryElement.style.width = `${batteryLevel}%`;
+                    batteryElement.textContent = `${batteryLevel}% Batteri`;
+                }
+
+                taskElement.textContent = `Gjeldende oppgave: ${data.current_mission_id || 'Ingen'}`;
+            }
+
+            if (infoType === 'heartbeat') {
+                const lastContactElement = robotCard.querySelector('.heartbeat');
+                const formattedDate = formatDate(data.timestamp);
+                lastContactElement.textContent = `Siste signal: ${formattedDate}`;
+            }
+        }
+
+        function translateStatus(status, batteryLevel) {
+            if (status === "available" && batteryLevel >= 60) {
+                return "Tilgjengelig";
+            } else if (status === "busy") {
+                return "Opptatt i et oppdrag";
+            } else if (batteryLevel < 60) {
+                return "Ikke tilgjengelig (Må lades før oppdrag)";
+            } else {
+                return "Tilgjengelig";
+            }
+        }
+
+        function formatDate(timestamp) {
+            const utcDate = new Date(timestamp);
+            const localDate = new Date(utcDate.getTime() + (4 * 60 * 60 * 1000));
+            const options = {
+                year: 'numeric', month: 'short', day: 'numeric',
+                hour: '2-digit', minute: '2-digit', second: '2-digit',
+                hour12: false,
+                timeZone: 'UTC'
+            };
+            return localDate.toLocaleString('no-NO', options);
+        }
+
+        function createRobotCard(isarId, robotName, robotInfo) {
+            const container = document.getElementById('robot-container');
+            const cardHtml = `
                 <div class="col-md-4">
-                    <div class="card">
-                        <div class="card-header">Robotposisjon</div>
-                        <div class="card-body p-0">
-                            <div id="map" style="position: relative; width: 100%; height: 600px; background-image: url('/static/Facility_map.png'); background-size: cover; background-position: center;"></div>
-            </main>
-            
-                   
-    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const isarId = "{{ isar_id }}";
-            const robotIds = ["00000000-0000-0000-0000-000000000000"];
-
-            
-            // WebSocket-serveren
-            var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
-
-            socket.on('update_robot_heartbeat', function(msg) {
-                if(msg.isar_id === isarId) {
-                    const data = JSON.parse(msg.data);
-                    const isarId = msg.isar_id;
-                    localStorage.setItem(`robot_heartbeat_${isarId}`, JSON.stringify(data));
-                    updateOrCreateRobotCard(isarId, 'heartbeat', data);
-                }
-            });
-
-
-            socket.on('update_robot_status', function(msg) {
-                if(msg.isar_id === isarId) {
-                    const data = JSON.parse(msg.data);
-                    const isarId = msg.isar_id;
-                    localStorage.setItem(`robot_status_${isarId}`, JSON.stringify(data));
-                    updateOrCreateRobotCard(isarId, 'status', data);
-                }
-            });
-    
-            socket.on('update_battery', function(msg) {
-                if(msg.isar_id === isarId) {
-                    const data = JSON.parse(msg.data);
-                    const isarId = msg.isar_id;
-                    localStorage.setItem(`robot_battery_${isarId}`, JSON.stringify(data));
-                    updateOrCreateRobotCard(isarId, 'battery', data);
-                }
-            });
-
-            socket.on('update_mission', function(msg) {
-                if(msg.isar_id === isarId) {
-                    const data = JSON.parse(msg.data);
-                    const isarId = msg.isar_id;
-                    updateOrCreateRobotCard(isarId, 'mission', data);
-                }
-            });
-    
-            function updateOrCreateRobotCard(isarId, infoType, data) {
-                let robotCard = document.getElementById(`robot_card_${isarId}`);
-                if (!robotCard) {
-                    robotCard = createRobotCard(isarId, data.robot_name || 'Ukjent');
-                }
-
-                if (infoType === 'status' || infoType === 'battery' || infoType === 'mission') {
-                    const statusElement = robotCard.querySelector('.status');
-                    statusElement.textContent = `Status: ${data.robot_status || data.status || 'tilgjengelig'}`;
-
-                    const taskElement = robotCard.querySelector('.task');
-                    taskElement.textContent = `Gjeldende oppgave: ${data.current_mission_id || data.mission_id || 'Ingen oppdrag'}`;
-
-                    if (infoType === 'battery') {
-                        const batteryElement = robotCard.querySelector('.progress-bar');
-                        batteryElement.style.width = `${data.battery_level}%`;
-                        batteryElement.textContent = `${data.battery_level}% Batteri`;
-                    }
-
-                    if (infoType === 'mission') {
-                        const missionStatusElement = robotCard.querySelector('.mission-status');
-                        missionStatusElement.textContent = `Oppdragsstatus: ${data.status || 'Ukjent'} - Sist oppdatert: ${new Date(data.timestamp).toLocaleString()}`;
-                    }
-                }
-            }
-
-    
-            function createRobotCard(isarId, robotName) {
-                const container = document.getElementById('robot-container');
-                const cardHtml = `
-                    <div class="col-md-4">
-                        <div class="card robot-card" id="robot_card_${isarId}">
-                            <div class="card-body">
-                                <h5 class="robot-name">${robotName}</h5>
-                                <p class="status">Status: Ukjent</p>
-                                <p class="task">Gjeldende oppgave: Ingen</p>
-                                <p class="mission-status">Oppdragsstatus: Ukjent - Sist oppdatert: Ikke tilgjengelig</p>
-                                <div class="progress">
-                                    <div class="progress-bar" style="width: 0%; height: 100%">0% Batteri</div>
-                                </div>
+                    <div class="card robot-card" id="robot_card_${isarId}">
+                        <div class="card-body">
+                            <img src="{{ url_for('static', filename='turtlebotPi.jpg') }}" alt="Robot Image">
+                            <h5 class="robot-name">${robotName || 'Ukjent'}</h5>
+                            <p class="status ${getStatusClass(robotInfo.robot_status, robotInfo.battery_level)}">Status: ${translateStatus(robotInfo.robot_status, robotInfo.battery_level)}</p>
+                            <p class="task">Gjeldende oppgave: ${robotInfo.current_mission_id || 'Ingen'}</p>
+                            <p class="heartbeat">Siste signal: </p> <!-- heartbeat will be updated by MQTT -->
+                            <div class="progress">
+                                <div class="progress-bar" style="width: ${robotInfo.battery_level || 0}%; height: 100%">${robotInfo.battery_level || 0}% Batteri</div>
                             </div>
+                            <form method="post" id="missionControlForm">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            </form>
                         </div>
-                    </div>`;
-                container.innerHTML += cardHtml;
-                return document.getElementById(`robot_card_${isarId}`);
-            }
-
-            socket.on('update_robot_heartbeat', function(msg) {
-                const data = JSON.parse(msg.data);
-                const robotName = data.robot_name;
-                const heartbeat = data.timestamp;
-                updateRobotInfo(robotName, heartbeat);
-            });
-
-            socket.on('update_pose', function(msg) {
-                const data = JSON.parse(msg.data);
-                
-                if(data.pose && data.pose.position) {
-                    const position = data.pose.position;
-                    updateRobotPosition(data.isar_id, data.robot_name, position.x, position.y, position.z);
-                } else {
-                    console.error('Pose eller position er undefined', data);
-                }
-            });
-
-
-            function updateRobotPosition(isarId, robotName, x, y, z) {
-                var map = document.getElementById('map');
-
-                var robotMapElement = document.getElementById(`robot-map-${isarId}`);
-                var robotNameElement = document.getElementById(`robot-name-${isarId}`);
-
-                if (!robotMapElement) {
-                    robotMapElement = document.createElement('img');
-                    robotMapElement.id = `robot-map-${isarId}`;
-                    robotMapElement.src = '/static/robot.png';
-                    robotMapElement.style.position = 'absolute';
-                    robotMapElement.style.width = '40px';
-                    robotMapElement.style.height = '40px';
-                    map.appendChild(robotMapElement);
-
-                    robotNameElement = document.createElement('div');
-                    robotNameElement.id = `robot-name-${isarId}`;
-                    robotNameElement.style.position = 'absolute';
-                    robotNameElement.style.whiteSpace = 'nowrap';
-                    robotNameElement.style.color = 'black';
-                    robotNameElement.style.fontSize = '12px';
-                    robotNameElement.style.backgroundColor = 'white';
-                    robotNameElement.style.padding = '2px 5px';
-                    robotNameElement.style.borderRadius = '4px';
-                    map.appendChild(robotNameElement);
-                }
-
-                var xPos = (x / 10) * 514;
-                var yPos = (y / 10) * 472;
-
-                robotMapElement.style.left = `${xPos - robotMapElement.width / 2}px`;
-                robotMapElement.style.top = `${yPos - robotMapElement.height / 2}px`;
-
-                robotNameElement.innerHTML = robotName;
-                robotNameElement.style.left = `${xPos - 5}px`;
-                robotNameElement.style.top = `${yPos + 15}px`;
-            }
-
-
-            function updateRobotInfo(robotName, heartbeat, position) {
-                var infoElement = document.getElementById('robot-info');
-                infoElement.innerHTML = 'Robot: ' + robotName + '<br>' + 'Hjerteslag: ' + heartbeat;
-            }
-
-    
-            robotIds.forEach(isarId => {
-                const robotStatusData = localStorage.getItem(`robot_status_${isarId}`);
-                const robotBatteryData = localStorage.getItem(`robot_battery_${isarId}`);
-                if (robotStatusData) {
-                    updateOrCreateRobotCard(isarId, 'status', JSON.parse(robotStatusData));
-                }
-                if (robotBatteryData) {
-                    updateOrCreateRobotCard(isarId, 'battery', JSON.parse(robotBatteryData));
-                }
-            });
-
-            document.getElementById('stop').addEventListener('click', function() {
-                fetch('/schedule/stop-mission', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    }
-                })
-                .then(response => {
-                    if (response.ok) {
-                        console.log('Oppdrag stoppet.');
-                    } else {
-                        console.error('Det oppsto en feil ved forsøk på å stoppe oppdraget.');
-                    }
-                })
-                .catch(error => {
-                    console.error('Nettverksfeil:', error);
-                });
-            });
-            document.getElementById('pause').addEventListener('click', function() {
-                fetch('/schedule/pause-mission', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    }
-                })
-                .then(handleResponse)
-                .catch(handleError);
-            });
-
-            document.getElementById('resume').addEventListener('click', function() {
-                fetch('/schedule/resume-mission', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    }
-                })
-                .then(handleResponse)
-                .catch(handleError);
-            });
-
-            function handleResponse(response) {
-            response.json().then(data => {
-                if (response.ok) {
-                    console.log('Handling vellykket.');
-                } else {
-                    console.error('Det oppsto en feil.');
-                }
-    });
-}
-
-function handleError(error) {
-    console.error('Nettverksfeil:', error);
-    alert('Nettverksfeil: Kunne ikke kommunisere med serveren.');
-}
-
-        });
-    </script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            document.getElementById('replan').addEventListener('click', function() {
-                document.getElementById('loadingSpinner').classList.remove('d-none');
-        
-                setTimeout(function() {
-                    $('#replanModal').modal('show');
-                    document.getElementById('loadingSpinner').classList.add('d-none');
-                }, 2000);
-            });
-        
-            document.getElementById('acceptNewPlan').addEventListener('click', function() {
-                $('#replanModal').modal('hide'); 
-                document.getElementById('loadingSpinner').innerHTML = `
-                    <div class="alert alert-success" role="alert">
-                        Ny plan satt i gang!
                     </div>
-                `;
-                document.getElementById('loadingSpinner').classList.remove('d-none');
-                setTimeout(function() {
-                    document.getElementById('loadingSpinner').classList.add('d-none');
-                }, 4000);
-            });
-        });
-        document.addEventListener('DOMContentLoaded', function () {
+                </div>`;
+            container.insertAdjacentHTML('beforeend', cardHtml);
+            return document.getElementById(`robot_card_${isarId}`);
+        }
 
-            document.getElementById('stop').addEventListener('click', function() {
-                handleMissionControl('/schedule/stop-mission', 'Oppdrag stoppet vellykket.');
-            });
-
-            document.getElementById('pause').addEventListener('click', function() {
-                handleMissionControl('/schedule/pause-mission', 'Oppdraget er satt på pause.');
-            });
-
-            document.getElementById('resume').addEventListener('click', function() {
-                handleMissionControl('/schedule/resume-mission', 'Oppdraget fortsetter.');
-            });
-
-            function handleMissionControl(url, successMessage) {
-                fetch(url, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.message) {
-                        showModal(data.message);
-                    } else {
-                        showModal(successMessage);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showModal('Nettverksfeil: Kunne ikke kommunisere med serveren.');
-                });
+        function getStatusClass(status, batteryLevel) {
+            if (status === "available" && batteryLevel >= 60) {
+                return "text-success";
+            } else if (status === "busy") {
+                return "text-danger";
+            } else if (batteryLevel < 60 && status !== "busy") {
+                return "text-warning";
+            } else {
+                return "";
             }
+        }
 
-            function showModal(message) {
-                document.getElementById('statusMessage').innerText = message;
-                $('#statusModal').modal('show');
-            }
-        });
-        document.addEventListener('DOMContentLoaded', function () {
-            const completedMissionsData = [
-                { missionName: "Maintenance level 1", completedAt: "2024-04-01 12:00"},
-                { missionName: "Maintenance level 2", completedAt: "2024-04-02 13:00"},
-            ];
-
-            const tbody = document.getElementById('completed-missions');
-            completedMissionsData.forEach(mission => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `<td>${mission.missionName}</td><td>${mission.completedAt}</td>`;
-                tbody.appendChild(tr);
+        function handleMissionControl(url, successMessage, csrfToken) {
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    showModal(data.message);
+                } else {
+                    showModal(successMessage);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showModal('Nettverksfeil: Kunne ikke kommunisere med serveren.');
             });
+        }
+
+        function showModal(message) {
+            document.getElementById('statusMessage').innerText = message;
+            $('#statusModal').modal('show');
+        }
+
+        document.getElementById('replan').addEventListener('click', function() {
+            document.getElementById('loadingSpinner').classList.remove('d-none');
+
+            setTimeout(function() {
+                $('#replanModal').modal('show');
+                document.getElementById('loadingSpinner').classList.add('d-none');
+            }, 2000);
         });
-                </script>
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+        document.getElementById('acceptNewPlan').addEventListener('click', function() {
+            $('#replanModal').modal('hide'); 
+            document.getElementById('loadingSpinner').innerHTML = `
+                <div class="alert alert-success" role="alert">
+                    Ny plan satt i gang!
+                </div>
+            `;
+            document.getElementById('loadingSpinner').classList.remove('d-none');
+            setTimeout(function() {
+                document.getElementById('loadingSpinner').classList.add('d-none');
+            }, 4000);
+        });
+
+        const completedMissionsData = [
+            { missionName: "Maintenance level 1", completedAt: "2024-04-01 12:00"},
+            { missionName: "Maintenance level 2", completedAt: "2024-04-02 13:00"},
+        ];
+
+        const tbody = document.getElementById('completed-missions');
+        completedMissionsData.forEach(mission => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${mission.missionName}</td><td>${mission.completedAt}</td>`;
+            tbody.appendChild(tr);
+        });
+    });
+</script>
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
 </body>
 </html>
 {% endblock %}

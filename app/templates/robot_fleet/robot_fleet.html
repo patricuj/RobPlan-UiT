@@ -47,77 +47,124 @@
     <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            const robotIds = ["00000000-0000-0000-0000-000000000000"];
+            fetch('/api/robot_info')
+                .then(response => response.json())
+                .then(robotData => {
+                    robotData.forEach(robot => {
+                        createRobotCard(robot.isar_id, robot.robot_name, robot);
+                    });
+                });
+
             var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
 
             socket.on('update_robot_heartbeat', function(msg) {
                 const data = JSON.parse(msg.data);
                 const isarId = msg.isar_id;
                 localStorage.setItem(`robot_heartbeat_${isarId}`, JSON.stringify(data));
-                updateOrCreateRobotCard(isarId, 'heartbeat', data);
+                updateRobotCard(isarId, 'heartbeat', data);
             });
-
 
             socket.on('update_robot_status', function(msg) {
                 const data = JSON.parse(msg.data);
                 const isarId = msg.isar_id;
                 localStorage.setItem(`robot_status_${isarId}`, JSON.stringify(data));
-                updateOrCreateRobotCard(isarId, 'status', data);
+                updateRobotCard(isarId, 'status', data);
             });
 
             socket.on('update_battery', function(msg) {
                 const data = JSON.parse(msg.data);
                 const isarId = msg.isar_id;
                 localStorage.setItem(`robot_battery_${isarId}`, JSON.stringify(data));
-                updateOrCreateRobotCard(isarId, 'battery', data);
+                updateRobotCard(isarId, 'battery', data);
             });
 
-            robotIds.forEach(isarId => {
-                const robotStatusData = localStorage.getItem(`robot_status_${isarId}`);
-                const robotBatteryData = localStorage.getItem(`robot_battery_${isarId}`);
-                if (robotStatusData) {
-                    updateOrCreateRobotCard(isarId, 'status', JSON.parse(robotStatusData));
-                }
-                if (robotBatteryData) {
-                    updateOrCreateRobotCard(isarId, 'battery', JSON.parse(robotBatteryData));
+            socket.on('remove_robot_card', function(msg) {
+                const isarId = msg.isar_id;
+                const robotCard = document.getElementById(`robot_card_${isarId}`);
+                if (robotCard) {
+                    robotCard.remove();
                 }
             });
 
-            function updateOrCreateRobotCard(isarId, infoType, data) {
+            function updateRobotCard(isarId, infoType, data) {
                 let robotCard = document.getElementById(`robot_card_${isarId}`);
                 if (!robotCard) {
-                    robotCard = createRobotCard(isarId, data.robot_name, data.timestamp);
+                    createRobotCard(isarId, data.robot_name, data);
+                    robotCard = document.getElementById(`robot_card_${isarId}`);
                 }
 
-                if (infoType === 'status') {
-                    const statusElement = robotCard.querySelector('.status');
-                    statusElement.textContent = `Status: ${data.robot_status}`;
-                    const taskElement = robotCard.querySelector('.task');
+                const statusElement = robotCard.querySelector('.status');
+                const batteryElement = robotCard.querySelector('.progress-bar');
+                const taskElement = robotCard.querySelector('.task');
+
+                const batteryData = JSON.parse(localStorage.getItem(`robot_battery_${isarId}`)) || {};
+                const batteryLevel = data.battery_level !== undefined ? data.battery_level : (batteryData.battery_level || 0);
+
+                if (infoType === 'status' || infoType === 'battery') {
+                    const statusText = translateStatus(data.robot_status, batteryLevel);
+                    statusElement.textContent = `Status: ${statusText}`;
+                    statusElement.classList.remove('text-success', 'text-danger', 'text-warning');
+
+                    if (statusText === 'Tilgjengelig') {
+                        statusElement.classList.add('text-success');
+                    } else if (statusText === 'Opptatt i et oppdrag') {
+                        statusElement.classList.add('text-danger');
+                    } else if (statusText === 'Ikke tilgjengelig (Må lades før oppdrag)') {
+                        statusElement.classList.add('text-warning');
+                    }
+
+                    if (infoType === 'battery') {
+                        batteryElement.style.width = `${batteryLevel}%`;
+                        batteryElement.textContent = `${batteryLevel}% Batteri`;
+                    }
+
                     taskElement.textContent = `Gjeldende oppgave: ${data.current_mission_id || 'Ingen'}`;
-                } else if (infoType === 'battery') {
-                    const batteryElement = robotCard.querySelector('.progress-bar');
-                    batteryElement.style.width = `${data.battery_level}%`;
-                    batteryElement.textContent = `${data.battery_level}% Batteri`;
-                } else if (infoType === 'heartbeat') {
-                    const heartbeatElement = robotCard.querySelector('.heartbeat');
-                    heartbeatElement.textContent = `Heartbeat: ${data.timestamp}`;
+                }
+
+                if (infoType === 'heartbeat') {
+                    const lastContactElement = robotCard.querySelector('.heartbeat');
+                    const formattedDate = formatDate(data.timestamp);
+                    lastContactElement.textContent = `Siste signal: ${formattedDate}`;
                 }
             }
 
+            function translateStatus(status, batteryLevel) {
+                if (status === "available" && batteryLevel >= 60) {
+                    return "Tilgjengelig";
+                } else if (status === "busy") {
+                    return "Opptatt i et oppdrag";
+                } else if (batteryLevel < 60) {
+                    return "Ikke tilgjengelig (Må lades før oppdrag)";
+                } else {
+                    return "Tilgjengelig";
+                }
+            }
 
-            function createRobotCard(isarId, robotName, heartbeat) {
+            function formatDate(timestamp) {
+                const utcDate = new Date(timestamp);
+                const localDate = new Date(utcDate.getTime() + (4 * 60 * 60 * 1000));
+                const options = {
+                    year: 'numeric', month: 'short', day: 'numeric',
+                    hour: '2-digit', minute: '2-digit', second: '2-digit',
+                    hour12: false,
+                    timeZone: 'UTC'
+                };
+                return localDate.toLocaleString('no-NO', options);
+            }
+
+            function createRobotCard(isarId, robotName, robotInfo) {
                 const container = document.getElementById('robot-container');
                 const cardHtml = `
                     <div class="col-md-4">
                         <div class="card robot-card" id="robot_card_${isarId}">
                             <div class="card-body">
-                                <img src="static/turtlebotPi.jpg" alt="Robot Image">
+                                <img src="{{ url_for('static', filename='turtlebotPi.jpg') }}" alt="Robot Image">
                                 <h5 class="robot-name">${robotName || 'Ukjent'}</h5>
-                                <p class="status">Status: Ukjent</p>
-                                <p class="task">Gjeldende oppgave: Ingen</p>
-                                <p class="heartbeat">Siste hjerteslag: ${heartbeat || 'Ingen'}</p>
+                                <p class="status ${getStatusClass(robotInfo.robot_status, robotInfo.battery_level)}">Status: ${translateStatus(robotInfo.robot_status, robotInfo.battery_level)}</p>
+                                <p class="task">Gjeldende oppgave: ${robotInfo.current_mission_id || 'Ingen'}</p>
+                                <p class="heartbeat">Siste signal: </p> <!-- heartbeat will be updated by MQTT -->
                                 <div class="progress">
-                                    <div class="progress-bar" style="width: 0%; height: 100%">0% Batteri</div>
+                                    <div class="progress-bar" style="width: ${robotInfo.battery_level || 0}%; height: 100%">${robotInfo.battery_level || 0}% Batteri</div>
                                 </div>
                                 <a href="/robot_status/${isarId}" class="btn-detail">Detaljer →</a>
                             </div>
@@ -127,6 +174,17 @@
                 return document.getElementById(`robot_card_${isarId}`);
             }
 
+            function getStatusClass(status, batteryLevel) {
+                if (status === "available" && batteryLevel >= 60) {
+                    return "text-success";
+                } else if (status === "busy") {
+                    return "text-danger";
+                } else if (batteryLevel < 60 && status !== "busy") {
+                    return "text-warning";
+                } else {
+                    return "";
+                }
+            }
         });
     </script>
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>

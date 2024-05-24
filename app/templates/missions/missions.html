@@ -104,9 +104,17 @@
         </div>
     </div>
 </div>
-    <div class="container-fluid">
-        <div class="row">
-                <ul class="nav flex-column">
+<div class="container-fluid">
+    <div class="row">
+        <button class="btn btn-primary d-md-none" onclick="openNav()">
+            <i class="fas fa-bars"></i>
+        </button>
+        <nav id="mySidebar" class="sidebar">
+            <a href="javascript:void(0)" class="closebtn d-md-none" onclick="closeNav()">&times;</a>
+            <ul class="nav flex-column">
+                <li class="nav-item logo-item">
+                    <img src="{{ url_for('static', filename='Logo.png') }}" alt="Logo" class="logo">
+                </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('main.home') }}"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
                     </li>
@@ -316,48 +324,6 @@
                 });
             });
         });
-
-        var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
-
-        socket.on('update_robot_status', function(msg) {
-            const data = JSON.parse(msg.data);
-            const isarId = msg.isar_id;
-            localStorage.setItem(`robot_status_${isarId}`, JSON.stringify(data));
-            document.querySelectorAll('.start-mission').forEach(button => {
-                const port = button.getAttribute('data-port');
-                const robotStatus = JSON.parse(localStorage.getItem(`robot_status_${port}`));
-                if (robotStatus.robot_status !== 'available') {
-                    button.classList.remove('btn-success');
-                    button.classList.add('btn-warning');
-                    button.disabled = true;
-                } else {
-                    button.classList.add('btn-success');
-                    button.classList.remove('btn-warning');
-                    button.disabled = false;
-                }
-            });
-        });
-
-        socket.on('update_battery', function(msg) {
-            const data = JSON.parse(msg.data);
-            const isarId = msg.isar_id;
-            localStorage.setItem(`robot_battery_${isarId}`, JSON.stringify(data));
-            document.querySelectorAll('.start-mission').forEach(button => {
-                const port = button.getAttribute('data-port');
-                const robotBattery = JSON.parse(localStorage.getItem(`robot_battery_${port}`));
-                const robotStatus = JSON.parse(localStorage.getItem(`robot_status_${port}`));
-                if (robotBattery.battery_level < 60 || robotStatus.robot_status !== 'available') {
-                    button.classList.remove('btn-success');
-                    button.classList.add('btn-warning');
-                    button.disabled = true;
-                } else {
-                    button.classList.add('btn-success');
-                    button.classList.remove('btn-warning');
-                    button.disabled = false;
-                }
-            });
-        });
-
         document.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('.edit-mission').forEach(button => {
                 button.addEventListener('click', function() {
@@ -466,6 +432,15 @@
             }
         });
     });
+
+    function openNav() {
+        document.getElementById("mySidebar").classList.add('show');
+    }
+
+    function closeNav() {
+        document.getElementById("mySidebar").classList.remove('show');
+    }
+
     document.getElementById('makeAllMissionsAvailable').addEventListener('click', function() {
         fetch('/make-all-missions-available', {
             method: 'POST',

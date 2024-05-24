@@ -6,8 +6,15 @@
 <body>
     <div class="container-fluid">
         <div class="row">
-            <nav class="col-md-2 d-none d-md-block sidebar">
+            <button class="btn btn-primary d-md-none" onclick="openNav()">
+                <i class="fas fa-bars"></i>
+            </button>
+            <nav id="mySidebar" class="sidebar">
+                <a href="javascript:void(0)" class="closebtn d-md-none" onclick="closeNav()">&times;</a>
                 <ul class="nav flex-column">
+                    <li class="nav-item logo-item">
+                        <img src="{{ url_for('static', filename='Logo.png') }}" alt="Logo" class="logo">
+                    </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('main.home') }}"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
                     </li>
@@ -186,6 +193,14 @@
                 }
             }
         });
+
+        function openNav() {
+            document.getElementById("mySidebar").classList.add('show');
+        }
+
+        function closeNav() {
+            document.getElementById("mySidebar").classList.remove('show');
+        }
     </script>
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>

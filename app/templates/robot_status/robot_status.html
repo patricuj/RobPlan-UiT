@@ -377,7 +377,7 @@
                 <div class="col-md-4">
                     <div class="card robot-card" id="robot_card_${isarId}">
                         <div class="card-body">
-                            <img src="{{ url_for('static', filename='turtlebotPi.jpg') }}" alt="Robot Image">
+                            <img src="{{ url_for('static', filename='ROBOT.jpg') }}" alt="Robot Image">
                             <h5 class="robot-name">${robotName || 'Ukjent'}</h5>
                             <p class="status ${getStatusClass(robotInfo.robot_status, robotInfo.battery_level)}">Status: ${translateStatus(robotInfo.robot_status, robotInfo.battery_level)}</p>
                             <p class="task">Gjeldende oppgave: ${robotInfo.current_mission_id || 'Ingen'}</p>

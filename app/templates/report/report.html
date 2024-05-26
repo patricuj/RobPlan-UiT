@@ -85,12 +85,14 @@
 </div>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Henter HTML-elementer som skal brukes i rapporten
         var mapContainer = document.getElementById('map-container');
         var electricBoxImage = document.querySelector('div.media-item[data-target="#electricBoxModal"] img');
         var valveImage = document.querySelector('div.media-item[data-target="#imageModal"] img');
         var audioPlayer = document.getElementById('exampleAudio');
         var robot = document.getElementById('robot');
     
+        // Definerer markører og rute i kartet
         var markers = [
             {id: 1, x: 358, y: 260, name: '1. El.boks'},
             {id: 2, x: 247, y: 153, name: '2. Svitsj'},
@@ -100,6 +102,7 @@
         var route = [{x: 300, y: 400}, {x: 370, y: 260}, {x: 180, y: 140}, {x: 80, y: 260}, {x: 300, y: 400}];
         var currentPoint = 0;
     
+        // Flytter roboten langs den definerte ruten
         function moveRobot() {
             if (currentPoint < route.length) {
                 robot.style.left = route[currentPoint].x + 'px';
@@ -113,22 +116,26 @@
             }
         }
 
+        // Starter animasjonen av roboten
         function startAnimation() {
             stopAndHideAudio();
             removeImageHighlights();
             moveRobot();
         }
     
+        // Spiller av lyd
         function playAudio() {
             audioPlayer.style.display = 'block';
             audioPlayer.play();
         }
     
+        // Stopper og skjuler lydavspiller
         function stopAndHideAudio() {
             audioPlayer.pause();
             audioPlayer.currentTime = 0;
         }
     
+        // Fjerner markeringer og blinkende effekter fra bilder og lydavspiller
         function removeImageHighlights() {
             [electricBoxImage, valveImage].forEach(image => {
                 image.classList.remove('highlighted-img', 'blinking');
@@ -139,6 +146,7 @@
             });
         }
     
+        // Oppretter markører på kartet
         markers.forEach(function(marker) {
             var el = document.createElement('div');
             el.className = 'marker';
@@ -164,6 +172,7 @@
             el.appendChild(markerName);
             mapContainer.appendChild(el);
     
+            // Legger til en klikkhendelse for hver markør
             el.addEventListener('click', function() {
                 removeImageHighlights();
                 stopAndHideAudio();
@@ -179,6 +188,7 @@
             });
         });
     
+        // Fjerner markeringer hvis brukeren klikker utenfor en markør på kartet
         document.getElementById('facility-map').addEventListener('click', function(event) {
             if (!event.target.classList.contains('marker') && event.target.id === 'facility-map') {
                 removeImageHighlights();
@@ -186,6 +196,7 @@
             }
         });
     
+        // Starter robotanimasjon når brukeren klikker på startknappen
         document.getElementById('startAnimationBtn').addEventListener('click', function() {
             startAnimation();
         });

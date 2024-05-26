@@ -195,6 +195,7 @@
                 $('#deleteConfirmationModal').modal('show');
             }
 
+            // Lytter etter klikk på slett-knappen i bekreftelsesdialogen
             document.getElementById('confirmDeleteButton').addEventListener('click', function() {
                 fetch(`/delete-report?result_id=${encodeURIComponent(deleteResultId)}&status=${encodeURIComponent(deleteStatus)}`, {
                     method: 'DELETE',
@@ -219,6 +220,7 @@
                 .catch(error => console.error('Error:', error));
             });
 
+            // Lytter etter input i søkefeltet og oppdaterer historikktabellen
             document.getElementById('search-input').addEventListener('input', function() {
                 var query = this.value;
                 var robotName = document.getElementById('robot-select').value;
@@ -234,6 +236,7 @@
                     .catch(error => console.error('Error:', error));
             });
 
+            // Oppdaterer tabellen med nye data
             function updateHistoryTable(data) {
                 var tableBody = document.getElementById('history-content');
                 tableBody.innerHTML = '';

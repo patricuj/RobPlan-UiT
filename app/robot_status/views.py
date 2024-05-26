@@ -1,5 +1,5 @@
-from flask import Blueprint, render_template, request, jsonify, redirect, url_for
-from flask_login import login_required, current_user
+from flask import render_template, jsonify
+from flask_login import login_required
 import requests
 from . import robot_status_bp
 from ..models import RobotInfo
@@ -9,6 +9,9 @@ from ..extensions import db
 @robot_status_bp.route('/robot_status/<isar_id>')
 @login_required
 def robot_status(isar_id):
+    """
+    Viser status for en spesifikk robot.
+    """
     subquery = db.session.query(
         RobotInfo.isar_id,
         func.max(RobotInfo.id).label('latest_id')
@@ -28,6 +31,11 @@ def robot_status(isar_id):
 @robot_status_bp.route('/api/robot_info/<isar_id>', methods=['GET'])
 @login_required
 def get_robot_info(isar_id):
+    """
+    Henter den nyeste informasjonen om en spesifikk robot.
+    Samme prinsipp som funksjonen get_lastest_roboot_info i robot_fleet.
+
+    """
     subquery = db.session.query(
         RobotInfo.isar_id,
         func.max(RobotInfo.id).label('latest_id')
@@ -61,6 +69,9 @@ def get_robot_info(isar_id):
 @robot_status_bp.route('/api/robot/<isar_id>/stop', methods=['POST'])
 @login_required
 def stop_robot(isar_id):
+    """
+    Stopper robotens oppdrag.
+    """
     robot = RobotInfo.query.filter_by(isar_id=isar_id).order_by(RobotInfo.id.desc()).first()
     if robot and robot.port:
         url = f'http://localhost:{robot.port}/schedule/stop-mission'
@@ -75,6 +86,9 @@ def stop_robot(isar_id):
 @robot_status_bp.route('/api/robot/<isar_id>/pause', methods=['POST'])
 @login_required
 def pause_robot(isar_id):
+    """
+    Setter robotens oppdrag på pause.
+    """
     robot = RobotInfo.query.filter_by(isar_id=isar_id).order_by(RobotInfo.id.desc()).first()
     if robot and robot.port:
         url = f'http://localhost:{robot.port}/schedule/pause-mission'
@@ -89,6 +103,9 @@ def pause_robot(isar_id):
 @robot_status_bp.route('/api/robot/<isar_id>/resume', methods=['POST'])
 @login_required
 def resume_robot(isar_id):
+    """
+    Gjenopptar robotens oppdrag.
+    """
     robot = RobotInfo.query.filter_by(isar_id=isar_id).order_by(RobotInfo.id.desc()).first()
     if robot and robot.port:
         url = f'http://localhost:{robot.port}/schedule/resume-mission'

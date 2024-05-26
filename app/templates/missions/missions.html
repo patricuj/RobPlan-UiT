@@ -287,6 +287,8 @@
         document.addEventListener('DOMContentLoaded', function() {
             const scheduleHour = document.getElementById('scheduleHour');
             const scheduleMinute = document.getElementById('scheduleMinute');
+            
+            // Fyller schedule oppdrag valg med tider
             for (let i = 0; i < 24; i++) {
                 let option = new Option(i.toString().padStart(2, '0'), i);
                 scheduleHour.add(option);
@@ -313,7 +315,8 @@
                 startPredefinedMission(window.currentMissionData, window.currentMissionName, window.currentPort);
                 $('#startMissionModal').modal('hide');
             });
-        
+
+            // Planlegger oppdrag til et senere valgt tidspunkt
             document.getElementById('scheduleMission').addEventListener('click', function() {
                 const hour = scheduleHour.value.padStart(2, '0');
                 const minute = scheduleMinute.value.padStart(2, '0');
@@ -321,7 +324,8 @@
                 $('#startMissionModal').modal('hide');
             });
         });
-        
+
+        // Funksjon for å starte et oppdrag
         function startPredefinedMission(missionData, missionName, port) {
             const numericPort = parseInt(port, 10);
             const apiUrl = `/start-mission?port=${numericPort}`;
@@ -356,6 +360,7 @@
             });
         }
 
+        // Funksjon for å velge tilgjengelige porter (robotens porter) basert på robotstatus og batterinivå
         function selectAvailablePorts() {
             const robotIds = ["00000000-0000-0000-0000-000000000000", "00000000-0000-0000-0000-000000000002", "00000000-0000-0000-0000-000000000003", "00000000-0000-0000-0000-000000000004", "00000000-0000-0000-0000-000000000005", "00000000-0000-0000-0000-000000000006"];
             const availablePorts = [];
@@ -406,7 +411,7 @@
                     const missionName = this.getAttribute('data-name');
                     const status = this.getAttribute('data-status');
                     const deadline = this.getAttribute('data-deadline');
-                    
+
                     let deadlineDate = '';
                     let deadlineTime = '';
                     if (deadline) {
@@ -426,7 +431,7 @@
             });
         });
 
-
+        // JQuery for håndtering av skjema for å legge til nytt oppdrag
         $(document).ready(function() {
             $('#addMissionForm').on('submit', function(e) {
                 e.preventDefault();
@@ -508,6 +513,7 @@
         });
     });
 
+    // Sletting av oppdrag
     document.addEventListener('DOMContentLoaded', function() {
         const deleteButtons = document.querySelectorAll('.delete-mission');
         let missionIdToDelete = null;
@@ -538,7 +544,7 @@
                 const missionName = this.getAttribute('data-name');
                 const status = this.getAttribute('data-status');
                 const deadline = this.getAttribute('data-deadline');
-                
+
                 let deadlineDate = '';
                 let deadlineTime = '';
                 if (deadline) {
@@ -558,6 +564,7 @@
         });
     });
 
+    // Åpne og lukke sidemenyen for mindre skjermer
     function openNav() {
         document.getElementById("mySidebar").classList.add('show');
     }
@@ -566,6 +573,7 @@
         document.getElementById("mySidebar").classList.remove('show');
     }
 
+    // Gjør alle oppdrag tilgjengelige hvis det finnes en ledig robot
     document.getElementById('makeAllMissionsAvailable').addEventListener('click', function() {
         fetch('/make-all-missions-available', {
             method: 'POST',

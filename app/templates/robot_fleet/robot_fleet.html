@@ -57,16 +57,20 @@
     <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            // Henter robotinformasjon fra API og oppretter robotkort for hver robot
             fetch('/api/robot_info')
                 .then(response => response.json())
                 .then(robotData => {
+                    // Itererer gjennom robotdata og oppretter kort for hver robot
                     robotData.forEach(robot => {
                         createRobotCard(robot.isar_id, robot.robot_name, robot);
                     });
                 });
 
+            // Socket.IO-tilkobling
             var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
 
+            // Håndterer oppdatering av robotens heartbeat
             socket.on('update_robot_heartbeat', function(msg) {
                 const data = JSON.parse(msg.data);
                 const isarId = msg.isar_id;
@@ -74,6 +78,7 @@
                 updateRobotCard(isarId, 'heartbeat', data);
             });
 
+            // Håndterer oppdatering av robotens status
             socket.on('update_robot_status', function(msg) {
                 const data = JSON.parse(msg.data);
                 const isarId = msg.isar_id;
@@ -81,6 +86,7 @@
                 updateRobotCard(isarId, 'status', data);
             });
 
+            // Håndterer oppdatering av robotens batterinivå
             socket.on('update_battery', function(msg) {
                 const data = JSON.parse(msg.data);
                 const isarId = msg.isar_id;
@@ -88,6 +94,7 @@
                 updateRobotCard(isarId, 'battery', data);
             });
 
+            // Håndterer fjerning av robotkort
             socket.on('remove_robot_card', function(msg) {
                 const isarId = msg.isar_id;
                 const robotCard = document.getElementById(`robot_card_${isarId}`);
@@ -96,6 +103,7 @@
                 }
             });
 
+            // Oppdaterer informasjon på robotkortet basert på typen informasjon (status, battery, heartbeat)
             function updateRobotCard(isarId, infoType, data) {
                 let robotCard = document.getElementById(`robot_card_${isarId}`);
                 if (!robotCard) {
@@ -138,6 +146,7 @@
                 }
             }
 
+            // Oversetter robotens status fra engleks til norsk
             function translateStatus(status, batteryLevel) {
                 if (status === "available" && batteryLevel >= 60) {
                     return "Tilgjengelig";
@@ -150,6 +159,7 @@
                 }
             }
 
+            // Formaterer timestamp til en mer lesbar dato og tid
             function formatDate(timestamp) {
                 const utcDate = new Date(timestamp);
                 const localDate = new Date(utcDate.getTime() + (4 * 60 * 60 * 1000));
@@ -162,6 +172,7 @@
                 return localDate.toLocaleString('no-NO', options);
             }
 
+            // Oppretter et nytt kort for en robot og legger det til i DOM-en
             function createRobotCard(isarId, robotName, robotInfo) {
                 const container = document.getElementById('robot-container');
                 const cardHtml = `
@@ -172,7 +183,7 @@
                                 <h5 class="robot-name">${robotName || 'Ukjent'}</h5>
                                 <p class="status ${getStatusClass(robotInfo.robot_status, robotInfo.battery_level)}">Status: ${translateStatus(robotInfo.robot_status, robotInfo.battery_level)}</p>
                                 <p class="task">Gjeldende oppgave: ${robotInfo.current_mission_id || 'Ingen'}</p>
-                                <p class="heartbeat">Siste signal: </p> <!-- heartbeat will be updated by MQTT -->
+                                <p class="heartbeat">Siste signal: </p>
                                 <div class="progress">
                                     <div class="progress-bar" style="width: ${robotInfo.battery_level || 0}%; height: 100%">${robotInfo.battery_level || 0}% Batteri</div>
                                 </div>
@@ -184,6 +195,7 @@
                 return document.getElementById(`robot_card_${isarId}`);
             }
 
+            // Henter CSS-klassen basert på status og batterinivå
             function getStatusClass(status, batteryLevel) {
                 if (status === "available" && batteryLevel >= 60) {
                     return "text-success";
@@ -197,10 +209,12 @@
             }
         });
 
+        // Åpner sidemenyen for mindre skjermer
         function openNav() {
             document.getElementById("mySidebar").classList.add('show');
         }
 
+        // Lukker sidemenyen for mindre skjermer
         function closeNav() {
             document.getElementById("mySidebar").classList.remove('show');
         }

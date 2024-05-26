@@ -771,22 +771,25 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
+            // Socket.IO-tilkobling
             var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
             
+            // Lytter på 'low_battery_warning'-hendelsen og viser en notifkasjon.
             socket.on('low_battery_warning', function(msg) {
                 showAlert(`Lavt batterinivå for ${msg.robot_name}: ${msg.battery_level}%`, msg.severity);
             });
 
-    
+            // Lytter på 'mission_completed'-hendelsen og viser en notifikasjon.
             socket.on('mission_completed', function(msg) {
                 showAlert(`${msg.robot_name} har fullført oppdraget ${msg.mission_id}!`, msg.severity);
             });
 
-
+            // Lytter på 'mission_failed'-hendelsen og viser en notifikasjon
             socket.on('mission_failed', function(msg) {
                 showAlert(`${msg.robot_name} mislyktes med oppdraget ${msg.mission_id}!`, msg.severity);
             });
 
+            // Funksjon for å lukke notifikasjonen.
             window.closeAlert = function() {
                 var alertBox = document.getElementById('global-alert');
                 alertBox.style.display = 'none';
@@ -794,6 +797,7 @@
             }
         
             function showAlert(message, severity, url = '') {
+                // Sender en POST-forespørsel til serveren for å opprette en notifikasjon.
                 fetch('/notifications/create_notification', {
                     method: 'POST',
                     headers: {
@@ -826,6 +830,7 @@
             themeToggleButton.checked = isDarkMode;
             updateTheme();
 
+            //Oppdaterer temaet basert på om mørk modus er aktivert eller ikke.
             function updateTheme() {
                 const isDarkMode = themeToggleButton.checked;
                 bodyElement.classList.toggle('light-mode', !isDarkMode);
@@ -838,6 +843,7 @@
                 });
             }
 
+            // Legger til en hendelseslytter for å oppdatere temaet når bryteren endres.
             themeToggleButton.addEventListener('change', updateTheme);
         });
     </script>         

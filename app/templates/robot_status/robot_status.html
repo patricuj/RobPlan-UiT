@@ -166,8 +166,10 @@
 <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        // Henter valgt robot sin isarId
         const isarId = "{{ isar_id }}";
 
+        // Henter informasjon om roboten fra serveren
         fetch(`/api/robot_info/${isarId}`)
             .then(response => response.json())
             .then(robotData => {
@@ -176,14 +178,18 @@
                     return;
                 }
 
+                // Logger feil hvis port ikke er definert for roboten
                 if (!robotData.port) {
                     console.error('Port is not defined for the robot:', robotData);
                     return;
                 }
 
+                // Oppretter visning/kort av roboten med dataene som ble hentet
                 createRobotCard(robotData.isar_id, robotData.robot_name, robotData);
 
+                // CSRF-token fra skjemaet
                 const csrfToken = document.querySelector('input[name="csrf_token"]').value;
+
                 document.getElementById('stop').addEventListener('click', function() {
                     handleMissionControl(`/api/robot/${isarId}/stop`, 'Oppdrag stoppet vellykket.', csrfToken);
                 });
@@ -200,8 +206,10 @@
                 console.error('Error fetching robot info:', error);
             });
 
+        // Socket.IO-tilkobling
         var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
 
+        // Håndterer oppdatering av robotens heartbeat
         socket.on('update_robot_heartbeat', function(msg) {
             const data = JSON.parse(msg.data);
             if (msg.isar_id === isarId) {
@@ -210,6 +218,7 @@
             }
         });
 
+        // Håndterer oppdatering av robotens status
         socket.on('update_robot_status', function(msg) {
             const data = JSON.parse(msg.data);
             if (msg.isar_id === isarId) {
@@ -218,6 +227,7 @@
             }
         });
 
+        // Håndter oppdatering av robotens batterinivå
         socket.on('update_battery', function(msg) {
             const data = JSON.parse(msg.data);
             if (msg.isar_id === isarId) {
@@ -226,6 +236,7 @@
             }
         });
 
+        // Håndterer fjerning av robot
         socket.on('remove_robot_card', function(msg) {
             const isarId = msg.isar_id;
             if (isarId === isarId) {
@@ -236,6 +247,7 @@
             }
         });
 
+        // Håndterer oppdatering av robotens posisjon
         socket.on('update_pose', function(msg) {
             const data = JSON.parse(msg.data);
             if (data.pose && data.pose.position) {
@@ -246,6 +258,7 @@
             }
         });
 
+        // Oppdaterer robotens posisjon på kartet
         function updateRobotPosition(isarId, robotName, x, y, z) {
             var map = document.getElementById('map');
 
@@ -253,6 +266,7 @@
             var robotNameElement = document.getElementById(`robot-name-${isarId}`);
 
             if (!robotMapElement) {
+                // Oppretter et nytt bildeelement for roboten på kartet
                 robotMapElement = document.createElement('img');
                 robotMapElement.id = `robot-map-${isarId}`;
                 robotMapElement.src = '/static/robot.png';
@@ -261,6 +275,7 @@
                 robotMapElement.style.height = '40px';
                 map.appendChild(robotMapElement);
 
+                // Oppretter et nytt element for robotens navn
                 robotNameElement = document.createElement('div');
                 robotNameElement.id = `robot-name-${isarId}`;
                 robotNameElement.style.position = 'absolute';
@@ -273,17 +288,20 @@
                 map.appendChild(robotNameElement);
             }
 
+            // Beregner posisjonen til roboten på kartet
             var xPos = (x / 10) * 514;
             var yPos = (y / 10) * 472;
 
             robotMapElement.style.left = `${xPos - robotMapElement.width / 2}px`;
             robotMapElement.style.top = `${yPos - robotMapElement.height / 2}px`;
 
+            // Oppdaterer robotens navn og posisjon
             robotNameElement.innerHTML = robotName;
             robotNameElement.style.left = `${xPos - 5}px`;
             robotNameElement.style.top = `${yPos + 15}px`;
         }
 
+        // Oppdaterer robotkortet med ny informasjon
         function updateRobotCard(isarId, infoType, data) {
             let robotCard = document.getElementById(`robot_card_${isarId}`);
             if (!robotCard) {
@@ -326,6 +344,7 @@
             }
         }
 
+        // Oversetter robotstatus fra engelsk til norsk
         function translateStatus(status, batteryLevel) {
             if (status === "available" && batteryLevel >= 60) {
                 return "Tilgjengelig";
@@ -338,6 +357,7 @@
             }
         }
 
+        // Formaterer timestamp til mer lesbar dato og tid
         function formatDate(timestamp) {
             const utcDate = new Date(timestamp);
             const localDate = new Date(utcDate.getTime() + (4 * 60 * 60 * 1000));
@@ -350,6 +370,7 @@
             return localDate.toLocaleString('no-NO', options);
         }
 
+        // Oppretter en ny visning for en robot (nytt kort)
         function createRobotCard(isarId, robotName, robotInfo) {
             const container = document.getElementById('robot-container');
             const cardHtml = `
@@ -360,7 +381,7 @@
                             <h5 class="robot-name">${robotName || 'Ukjent'}</h5>
                             <p class="status ${getStatusClass(robotInfo.robot_status, robotInfo.battery_level)}">Status: ${translateStatus(robotInfo.robot_status, robotInfo.battery_level)}</p>
                             <p class="task">Gjeldende oppgave: ${robotInfo.current_mission_id || 'Ingen'}</p>
-                            <p class="heartbeat">Siste signal: </p> <!-- heartbeat will be updated by MQTT -->
+                            <p class="heartbeat">Siste signal: </p> <!-- heartbeat vil bli oppdatert av MQTT -->
                             <div class="progress">
                                 <div class="progress-bar" style="width: ${robotInfo.battery_level || 0}%; height: 100%">${robotInfo.battery_level || 0}% Batteri</div>
                             </div>
@@ -374,6 +395,7 @@
             return document.getElementById(`robot_card_${isarId}`);
         }
 
+        // Henter CSS-klassen basert på status og batterinivå
         function getStatusClass(status, batteryLevel) {
             if (status === "available" && batteryLevel >= 60) {
                 return "text-success";
@@ -386,6 +408,7 @@
             }
         }
 
+        // Håndterer kontroll av oppdrag (stopp, pause, fortsett)
         function handleMissionControl(url, successMessage, csrfToken) {
             fetch(url, {
                 method: 'POST',
@@ -435,6 +458,7 @@
             }, 4000);
         });
 
+        // Legger til hardkodet fullførte oppdrag til tabellen
         const completedMissionsData = [
             { missionName: "Maintenance level 1", completedAt: "2024-04-01 12:00"},
             { missionName: "Maintenance level 2", completedAt: "2024-04-02 13:00"},
@@ -447,13 +471,16 @@
             tbody.appendChild(tr);
         });
     });
-    function openNav() {
-            document.getElementById("mySidebar").classList.add('show');
-        }
 
-        function closeNav() {
-            document.getElementById("mySidebar").classList.remove('show');
-        }
+    // Åpner sidemenyen for mindre skjermer
+    function openNav() {
+        document.getElementById("mySidebar").classList.add('show');
+    }
+
+    // Lukker sidemenyen for mindre skjermer
+    function closeNav() {
+        document.getElementById("mySidebar").classList.remove('show');
+    }
 </script>
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>

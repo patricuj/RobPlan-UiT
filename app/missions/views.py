@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, jsonify, json, redirect, flash, url_for
+from flask import render_template, request, jsonify, json, redirect, flash, url_for
 import requests
 from . import missions_bp
 from ..models import Mission, RobotInfo
@@ -9,20 +9,36 @@ from flask_login import login_required
 @missions_bp.route('/missions')
 @login_required
 def missions():
+    """
+    Rute for å vise alle oppdrag.
+
+    Oppdaterer oppdragenes tilgjengelighet basert på batterinivået og statusen til robotene og viser deretter oppdragene.
+    """
     update_mission_availability_based_on_battery()
     
     all_missions = Mission.query.all()
-    print("Sending missions data:", all_missions)
+
     return render_template('missions/missions.html', missions=all_missions)
 
 
 def set_missions_availability(is_available):
+    """
+    Setter tilgjengeligheten til alle oppdrag.
+
+    Args:
+        is_available (bool): Om oppdragene skal være tilgjengelige.
+    """
     missions = Mission.query.all()
     for mission in missions:
         mission.IsAvailable = is_available
     db.session.commit()
 
 def update_mission_availability_based_on_battery():
+    """
+    Oppdaterer oppdragenes tilgjengelighet basert på batterinivået og statusen til robotene.
+
+    Setter alle oppdrag som tilgjengelige hvis noen roboter har tilstrekkelig batterinivå og ikke er opptatt.
+    """
     subquery = db.session.query(
         RobotInfo.isar_id,
         db.func.max(RobotInfo.id).label('max_id')
@@ -49,12 +65,26 @@ def update_mission_availability_based_on_battery():
 @missions_bp.route('/update-mission-availability', methods=['POST'])
 @login_required
 def update_mission_availability():
+    """
+    Rute for å oppdatere oppdragenes tilgjengelighet basert på batterinivået og statusen til robotene.
+
+    Returns:
+        Response: JSON-respons som bekrefter at tilgjengeligheten til oppdragene er oppdatert.
+    """
     update_mission_availability_based_on_battery()
     return jsonify({"message": "Mission availability updated based on robot battery levels"}), 200
 
 @missions_bp.route('/start-mission', methods=['POST'])
 @login_required
 def start_mission():
+    """
+    Rute for å starte et oppdrag.
+
+    Velger en tilgjengelig robot med tilstrekkelig batterinivå og som ikke er opptatt og starter oppdraget ved å sende en forespørsel til robotens API.
+
+    Returns:
+        Response: JSON-respons som bekrefter at oppdraget er startet eller en feilmelding.
+    """
     default_mission_data = request.json
 
     subquery = db.session.query(
@@ -85,6 +115,9 @@ def start_mission():
 
 
 def transform_mission_data(default_mission_data):
+    """
+    Transformerer oppdragsdata til riktig format for robotens API.
+    """
     mission_id = default_mission_data.get('mission_definition', {}).get('id', 'default_id')
     mission_name = default_mission_data.get('mission_definition', {}).get('name', 'default_name')
     transformed_tasks = []
@@ -133,6 +166,9 @@ def transform_mission_data(default_mission_data):
 @missions_bp.route('/add-mission', methods=['POST'])
 @login_required
 def add_mission():
+    """
+    Legger til et nytt oppdrag.
+    """
     mission_name = request.form.get('MissionName')
     mission_data = {
         "id": mission_name,
@@ -184,6 +220,9 @@ def add_mission():
 @missions_bp.route('/delete-mission/<int:mission_id>', methods=['POST'])
 @login_required
 def delete_mission(mission_id):
+    """
+    Sletter et oppdrag.
+    """
     mission = Mission.query.get_or_404(mission_id)
     db.session.delete(mission)
     db.session.commit()
@@ -193,6 +232,9 @@ def delete_mission(mission_id):
 @missions_bp.route('/edit-mission', methods=['POST'])
 @login_required
 def edit_mission():
+    """
+    Redigerer et oppdrag.
+    """
     mission_id = request.form.get('MissionId')
     mission_name = request.form.get('MissionName')
     status = request.form.get('Status')
@@ -222,11 +264,17 @@ def edit_mission():
 @missions_bp.route('/make-all-missions-available', methods=['POST'])
 @login_required
 def make_all_missions_available():
+    """
+    Gjør alle oppdrag tilgjengelige.
+    """
     set_missions_availability(True)
     return jsonify({"message": "Alle oppdrag er nå tilgjengelige"}), 200
 
 @missions_bp.route('/make-all-missions-unavailable', methods=['POST'])
 @login_required
 def make_all_missions_unavailable():
+    """
+    Gjør alle oppdrag utilgjengelige.
+    """
     set_missions_availability(False)
     return jsonify({"message": "Alle oppdrag er nå utilgjengelige"}), 200

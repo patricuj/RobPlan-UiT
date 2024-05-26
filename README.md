@@ -11,6 +11,9 @@ Utviklet av Bachelorgruppe 16 ved UiT Norges arktiske universitet, våren 2024.
 
 ## Lokal Utvikling
 
+***MERK:*** Dashboardet er blitt utviklet på Ubuntu 20.04 gjennom hele prosjektets gang og alle resultater produsert i bacheloroppgaven er basert på dette operativsystemet. Dashboardet har blitt installert og testet i Windows og, der alt fungerer utenom **Historikk**. Dette er på grunn av forskjell i hvordan dataene håndteres mellom Ubuntu og Windows.
+
+
 For å sette opp et lokalt utviklingsmiljø må repositoryen forkes:
 
 1. **Fork repoet:**
@@ -21,6 +24,7 @@ For å sette opp et lokalt utviklingsmiljø må repositoryen forkes:
    ```
    git clone https://github.com/<ditt-brukernavn>/RobPlan-UiT
    cd RobPlan-UiT
+   ```
 
 ## Oppsett av Docker Container
 
@@ -39,10 +43,13 @@ Kjør kommando:
     ```
 #### phpMyAdmin
 Etter oppsett av docker containeren kan du administrere databasen via http://localhost:8082/
-Username: user
-Password: test
+
+**Username:** user
+
+**Password:** test
 
 Trykk på SQL øverst og kjør scriptet i [Datamodel.sql](https://github.com/patricuj/RobPlan-UiT/blob/main/Database/Datamodel.sql)
+
 Deretter kjør scriptet i [Data.sql](https://github.com/patricuj/RobPlan-UiT/blob/main/Database/Data.sql)
 
 ## Virtuelt miljø
@@ -67,24 +74,24 @@ Deretter kjør scriptet i [Data.sql](https://github.com/patricuj/RobPlan-UiT/blo
 
     ```
     python -m venv venv
-    ```
-
-2. Aktiver det virtuelle miljøet:
-
-    ```
-    venv\Scripts\activate
-    ```
-
-### Installer alle avhengigheter:
-
-```
-pip install -r requirements.txt
-```
-
+    ```[ISAR](https://github.com/equinor/isar) 
 ### Installasjon av ISAR og isar-robot:
-ROBPLAN INSIGHT er designet for å jobbe med ISAR-systemet. Følg instruksjonene i de respektive repoene for å installere Equinors [ISAR](https://github.com/equinor/isar) og [isar-robot](https://github.com/equinor/isar-robot)
+ROBPLAN INSIGHT er designet for å jobbe med ISAR. Følg instruksjonene i de respektive repoene for å installere Equinors [ISAR](https://github.com/equinor/isar) og [isar-robot](https://github.com/equinor/isar-robot)
 
 Merk: Dashboardet har ikke blitt testet med ISAR kjørt på Docker, men fungerer med ISAR kjørt lokalt.
+
+#### Generell veiledning til installasjon av ISAR og isar-robot
+1. Lag en fork av [ISAR](https://github.com/equinor/isar) 
+2. Deretter klon og installer ISAR slik:
+```
+git clone https://github.com/<brukernavn>/isar
+cd isar
+pip install -e .[dev]
+```
+Installer så isar-robot med kommadoen:
+```
+pip install isar-robot
+```
 
 Etter installasjon av ISAR og isar-robot må du navigere til ISAR sin [settings.env](https://github.com/equinor/isar/blob/main/src/isar/config/settings.env) fil og sette følgende:
 ```
@@ -112,14 +119,18 @@ sudo systemctl enable mosquitto
 
 1. Last ned [Mosquitto](https://mosquitto.org/download/).
 2. Følg installasjonsinstruksjonene for Windows.
-3. Start Mosquitto-tjenesten ved å kjøre mosquitto.exe fra installasjonsmappen.
+3. Start Mosquitto-tjenesten ved å navigere til installasjonsmappen, default path er C:\Program Files\mosquitto og kjør kommandoen 
+```
+mosquitto.exe -v 
+```
+
 
 #### MQTT-klient
 For å overvåke MQTT-meldinger, anbefales det å bruke MQTT Explorer:
 
 1. Last ned [MQTT Explorer](https://mqtt-explorer.com/).
 2. Installer og konfigurer klienten til å koble til din lokale Mosquitto-broker.
-3. 
+3. Legg til en ny connection + og fyll inn følgende:
    - Name: Valgfritt navn
    - Host: localhost
    - Port: 1883
@@ -131,11 +142,29 @@ Husk å skru av Encryption (tls).
 ![image](https://github.com/patricuj/RobPlan-UiT/assets/125909221/9846c639-9d14-48cf-b02c-3fc6a68317d3)
 
 
-## Oppsett av selsignert SSL-sertifikat for lokal utvikling
+## Oppsett av selvsignert SSL-sertifikat for lokal utvikling
+
+### Linux
+
 Før du kjører applikasjonen, må du opprette et SSL-sertifikat for å kunne kjøre serveren over HTTPS:
 
-1. Åpne terminalen og naviger til mappen hvor du ønsker å lagre sertifikatene.
-2. Kjør følgende kommando for å generere en privat nøkkel og et offentlig sertifikat:
+1. Installer OpenSSL med kommandoen 
+```
+sudo apt-get install openssl
+```
+2. Åpne terminalen og naviger til mappen hvor du ønsker å lagre sertifikatene.
+3. Kjør følgende kommando for å generere en privat nøkkel og et offentlig sertifikat:
+   ```
+   openssl genrsa -out server.key 2048
+   openssl req -new -x509 -key server.key -out server.crt -days 365
+   ```
+Under prosessen, vil du bli bedt om å oppgi informasjon for sertifikatet. Disse kan være vilkårlige for lokal utvikling.
+
+### Windows
+
+1. Installer OpenSSL fra [slproweb.com](https://slproweb.com/products/Win32OpenSSL.html).
+2. Åpne OpenSSL og naviger til mappen hvor du ønsker å lagre sertifikatene.
+3. Kjør følgende kommando for å generere en privat nøkkel og et offentlig sertifikat:
    ```
    openssl genrsa -out server.key 2048
    openssl req -new -x509 -key server.key -out server.crt -days 365
@@ -146,7 +175,7 @@ Under prosessen, vil du bli bedt om å oppgi informasjon for sertifikatet. Disse
 ## Opprette en `.env`-fil
 For å konfigurere applikasjonen til å bruke SSL-sertifikater og hente resultatene fra ISAR, må du opprette en .env-fil i prosjektets rotmappe. Denne filen brukes til å sette miljøvariabler som applikasjonen vil lese ved oppstart.
 
-### Linux
+### Linux og Windows
 Opprett en .env-fil i prosjektets rotmappe og legg til følgende miljøvariabler:
 
 ```
@@ -159,21 +188,6 @@ For eksempel:
 export SSL_CERT_PATH="/home/dennis/RobPlan-UiT/server.crt"
 export SSL_KEY_PATH="/home/dennis/RobPlan-UiT/server.key"
 export RESULTS_DIR="/home/dennis/isar/results"
-```
-### Windows
-Opprett en .env-fil i prosjektets rotmappe og legg til følgende miljøvariabler:
-
-```
-set SSL_CERT_PATH="C:\path\to\your\server.crt"
-set SSL_KEY_PATH="C:\path\to\your\server.key"
-set RESULTS_DIR="C:\path\to\isar\results"
-```
-
-For eksempel:
-```
-export SSL_CERT_PATH="/path/to/your/server.crt"
-export SSL_KEY_PATH="/path/to/your/server.key"
-export RESULTS_DIR="/path/to/isar/results"
 ```
 
 ## Kjøre ROBPLAN INSIGHT og ISAR
@@ -237,6 +251,6 @@ Passord: test
 
 - [ROBOT](https://github.com/patricuj/RobPlan-UiT/blob/main/app/static/ROBOT.jpg)- <a href="https://www.freepik.com/free-vector/graident-ai-robot-vectorart_125887871.htm#query=robot&position=1&from_view=keyword&track=sph&uuid=c0e8a7e5-c537-49a0-a1d0-46b043e8263e">Image by juicy_fish</a> on Freepik
 - [Bakgrunnsbilde innlogging](https://github.com/patricuj/RobPlan-UiT/blob/main/app/static/robot.jpg)- Fritt å bruke uten kreditering. Hentet fra [Freepik.com](https://www.freepik.com/free-vector/abstract-realistic-technology-particle-background_6674339.htm#fromView=search&page=1&position=27&uuid=64310dea-24a2-46b7-b064-d17f50662932)
-- [Facility_map](https://github.com/patricuj/RobPlan-UiT/blob/main/app/static/Facility_map.png), [replan_mission.jpg](https://github.com/patricuj/RobPlan-UiT/blob/main/app/static/replan_mission.jpg) og [robot.png](https://github.com/patricuj/RobPlan-UiT/blob/main/app/static/robot.png) er hentet fra [Gazebo Turtleworld](https://emanual.robotis.com/docs/en/platform/turtlebot3/simulation/).
+- [Facility_map](https://github.com/patricuj/RobPlan-UiT/blob/main/app/static/Facility_map.png), [replan_mission.jpg](https://github.com/patricuj/RobPlan-UiT/blob/main/app/static/replan_mission.jpg) og [robotoverview.png](https://github.com/patricuj/RobPlan-UiT/blob/main/app/static/robot.png) er hentet fra [Gazebo Turtleworld](https://emanual.robotis.com/docs/en/platform/turtlebot3/simulation/).
 -  [current_mission.jpg](https://github.com/patricuj/RobPlan-UiT/blob/main/app/static/current_mission.jpg), [electric_box.jpg](https://github.com/patricuj/RobPlan-UiT/blob/main/app/static/electric_box.jpg) og [example_audio.wav](https://github.com/patricuj/RobPlan-UiT/blob/main/app/static/example_audio.wav) er hentet fra [ISAR](https://github.com/equinor/isar) og [isar-robot](https://github.com/equinor/isar-robot).
 - [Logo](https://github.com/patricuj/RobPlan-UiT/blob/main/app/static/Logo.png)/[Logo1](https://github.com/patricuj/RobPlan-UiT/blob/main/app/static/Logo1.png) er designet av oss utviklere av ROBPLAN INSIGHT.

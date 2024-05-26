@@ -308,7 +308,6 @@
         }
 
         .alert {
-            background-color: #333;
             color: #ffffff;
             border-radius: 5px;
             padding: 15px;
@@ -322,6 +321,21 @@
             z-index: 1050;
             width: 70%;
             box-sizing: border-box;
+        }
+
+        .alert-success {
+            background-color: #28a745 !important;
+            border-color: #28a745 !important;
+        }
+
+        .alert-danger {
+            background-color: #dc3545 !important;
+            border-color: #dc3545 !important;
+        }
+
+        .alert-info {
+            background-color: #17a2b8 !important;
+            border-color: #17a2b8 !important;
         }
 
         @keyframes fadeIn {
@@ -484,7 +498,7 @@
         }
 
         .light-mode .notification-item {
-            background-color: #6462c4;
+            background-color: #6f6ec0;
             color: #0e0202;
         }
 
@@ -526,6 +540,20 @@
             gap: 10px;
             margin: 20px;
             justify-content: flex-end;
+        }
+
+        .table thead th, .table tbody {
+            color: var(--table-color);
+        }
+
+        .light-mode .table {
+            background-color: var(--table-bg);
+            color: var(--table-color);
+        }
+
+        .light-mode .table thead th {
+            background-color: var(--header-bg);
+            color: var(--header-color);
         }
 
 
@@ -690,7 +718,7 @@
         }
 
         .badge-success-button {
-            background-color: #28a745;
+            background-color: #85d687;
             color: #000;
             border: none;
             padding: 0.25em 0.4em;

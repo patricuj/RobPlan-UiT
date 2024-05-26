@@ -1,8 +1,25 @@
 {% extends "base.html" %}
+
+{% block title %}Oppdrag{% endblock %}
+
 {% block content %}
 <!DOCTYPE html>
 <html lang="no">
 <head>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="alert-container">
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
 <body>
     <div class="modal fade" id="startMissionModal" tabindex="-1" role="dialog" aria-labelledby="startMissionModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
@@ -53,6 +70,67 @@
       </div>
     </div>
   </div>
+
+<div class="modal fade" id="deleteMissionModal" tabindex="-1" role="dialog" aria-labelledby="deleteMissionModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteMissionModalLabel">Slett Oppdrag</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Lukk">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                Er du sikker på at du vil slette dette oppdraget?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Avbryt</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteButton">Slett</button>
+            </div>
+        </div>
+    </div>
+</div>
+<form id="deleteMissionForm" method="post" action="" style="display:none;">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+</form>
+
+
+<div class="modal fade" id="editMissionModal" tabindex="-1" role="dialog" aria-labelledby="editMissionModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editMissionModalLabel">Endre Oppdrag</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Lukk">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="editMissionForm" method="post" action="{{ url_for('missions.edit_mission') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" id="editMissionId" name="MissionId">
+                    <div class="form-group">
+                        <label for="editMissionName">Oppdragsnavn</label>
+                        <input type="text" class="form-control" id="editMissionName" name="MissionName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editStatus">Status</label>
+                        <input type="text" class="form-control" id="editStatus" name="Status">
+                    </div>
+                    <div class="form-group">
+                        <label for="editDeadlineDate">Frist Dato</label>
+                        <input type="date" class="form-control" id="editDeadlineDate" name="DeadlineDate">
+                    </div>
+                    <div class="form-group">
+                        <label for="editDeadlineTime">Frist Tid</label>
+                        <input type="time" class="form-control" id="editDeadlineTime" name="DeadlineTime">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Oppdater Oppdrag</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 
   <div class="modal fade" id="addMissionModal" tabindex="-1" role="dialog" aria-labelledby="addMissionModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
@@ -139,8 +217,8 @@
                         <a class="nav-link" href="{{ url_for('settings.settings') }}"><i class="fas fa-cog"></i> Innstillinger</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/"><i class="fas fa-sign-out-alt"></i> Logg Ut</a>
-                    </li>                                     
+                        <a class="nav-link" href="{{ url_for('auth.logout') }}"><i class="fas fa-sign-out-alt"></i> Logg Ut</a>
+                    </li>                                  
                 </ul>
             </nav>
             <main role="main" class="col-md-10 ml-sm-auto col-lg-10 px-4">
@@ -151,7 +229,7 @@
                         Legg til nytt oppdrag
                     </button>
                     <div class="legend">
-                        <button class="badge badge-success badge-success-button" id="makeAllMissionsAvailable">Oppdrag tilgjengelig</button>
+                        <span class="badge badge-success badge-success-button">Oppdrag tilgjengelig</span>
                         <span class="badge badge-warning">Oppdrag ikke tilgjengelig</span>
                     </div>
                 </div>
@@ -194,10 +272,7 @@
                                            data-deadline="{{ mission.Deadline }}">
                                             Endre oppdrag
                                         </a>
-                                        <form action="{{ url_for('missions.delete_mission', mission_id=mission.idMission) }}" method="post">
-                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                            <button type="submit" class="dropdown-item">Slette oppdrag</button>
-                                        </form>
+                                        <button class="dropdown-item delete-mission" data-id="{{ mission.idMission }}">Slette oppdrag</button>
                                     </div>
                                 </div>
                             </td>
@@ -430,6 +505,56 @@
             if (item.classList.contains('list-group-item')) {
                 item.classList.toggle('selected');
             }
+        });
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const deleteButtons = document.querySelectorAll('.delete-mission');
+        let missionIdToDelete = null;
+
+        deleteButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                missionIdToDelete = this.getAttribute('data-id');
+                $('#deleteMissionModal').modal('show');
+            });
+        });
+
+        document.getElementById('confirmDeleteButton').addEventListener('click', function() {
+            if (missionIdToDelete) {
+                const deleteForm = document.getElementById('deleteMissionForm');
+                deleteForm.action = `/delete-mission/${missionIdToDelete}`;
+                deleteForm.submit();
+            }
+        });
+    });
+
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const editButtons = document.querySelectorAll('.edit-mission');
+
+        editButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const missionId = this.getAttribute('data-id');
+                const missionName = this.getAttribute('data-name');
+                const status = this.getAttribute('data-status');
+                const deadline = this.getAttribute('data-deadline');
+                
+                let deadlineDate = '';
+                let deadlineTime = '';
+                if (deadline) {
+                    const [date, time] = deadline.split(' ');
+                    deadlineDate = date;
+                    deadlineTime = time ? time.slice(0, 5) : '';
+                }
+
+                document.getElementById('editMissionId').value = missionId;
+                document.getElementById('editMissionName').value = missionName;
+                document.getElementById('editStatus').value = status;
+                document.getElementById('editDeadlineDate').value = deadlineDate;
+                document.getElementById('editDeadlineTime').value = deadlineTime;
+
+                $('#editMissionModal').modal('show');
+            });
         });
     });
 

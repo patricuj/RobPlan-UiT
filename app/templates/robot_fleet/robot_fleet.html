@@ -1,4 +1,7 @@
 {% extends "base.html" %}
+
+{% block title %}Flåteoversikt{% endblock %}
+
 {% block content %}
 <!DOCTYPE html>
 <html lang="no">
@@ -39,8 +42,8 @@
                         <a class="nav-link" href="{{ url_for('settings.settings') }}"><i class="fas fa-cog"></i> Innstillinger</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/"><i class="fas fa-sign-out-alt"></i> Logg Ut</a>
-                    </li>                                     
+                        <a class="nav-link" href="{{ url_for('auth.logout') }}"><i class="fas fa-sign-out-alt"></i> Logg Ut</a>
+                    </li>                                   
                 </ul>
             </nav>
             <main role="main" class="col-md-10 ml-sm-auto col-lg-10 px-4">
@@ -110,12 +113,12 @@
                 if (infoType === 'status' || infoType === 'battery') {
                     const statusText = translateStatus(data.robot_status, batteryLevel);
                     statusElement.textContent = `Status: ${statusText}`;
-                    statusElement.classList.remove('text-success', 'text-danger', 'text-warning');
+                    statusElement.classList.remove('text-success', 'text-warning', 'text-warning');
 
                     if (statusText === 'Tilgjengelig') {
                         statusElement.classList.add('text-success');
                     } else if (statusText === 'Opptatt i et oppdrag') {
-                        statusElement.classList.add('text-danger');
+                        statusElement.classList.add('text-warning');
                     } else if (statusText === 'Ikke tilgjengelig (Må lades før oppdrag)') {
                         statusElement.classList.add('text-warning');
                     }
@@ -185,7 +188,7 @@
                 if (status === "available" && batteryLevel >= 60) {
                     return "text-success";
                 } else if (status === "busy") {
-                    return "text-danger";
+                    return "text-warning";
                 } else if (batteryLevel < 60 && status !== "busy") {
                     return "text-warning";
                 } else {

@@ -101,6 +101,7 @@ CREATE TABLE IF NOT EXISTS `RobotInfo` (
   `robot_status` VARCHAR(255),
   `current_mission_id` VARCHAR(255),
   `port` INT,
+  `Timestamp` DATETIME NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE = InnoDB;
 

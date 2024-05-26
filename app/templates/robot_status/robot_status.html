@@ -1,4 +1,7 @@
 {% extends "base.html" %}
+
+{% block title %}{{ robot_name }}{% endblock %}
+
 {% block content %}
 <!DOCTYPE html>
 <html lang="no">
@@ -78,8 +81,15 @@
 <body>
     <div class="container-fluid">
         <div class="row">
-            <nav class="col-md-2 d-none d-md-block sidebar">
+            <button class="btn btn-primary d-md-none" onclick="openNav()">
+                <i class="fas fa-bars"></i>
+            </button>
+            <nav id="mySidebar" class="sidebar">
+                <a href="javascript:void(0)" class="closebtn d-md-none" onclick="closeNav()">&times;</a>
                 <ul class="nav flex-column">
+                    <li class="nav-item logo-item">
+                        <img src="{{ url_for('static', filename='Logo.png') }}" alt="Logo" class="logo">
+                    </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('main.index') }}"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
                 </li>
@@ -104,15 +114,15 @@
                     <a class="nav-link" href="{{ url_for('settings.settings') }}"><i class="fas fa-cog"></i> Innstillinger</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="/"><i class="fas fa-sign-out-alt"></i> Logg Ut</a>
-                </li>                                     
+                    <a class="nav-link" href="{{ url_for('auth.logout') }}"><i class="fas fa-sign-out-alt"></i> Logg Ut</a>
+                </li>                                   
             </ul>
         </nav>
         <main role="main" class="col-md-10 ml-sm-auto col-lg-10 px-4 py-4">
             <h2 id="robot-name-header" class="mb-4">Robotstatus</h2>
             <div id="robot-container" class="mb-4"></div>
             
-            <div class="card mb-4">
+            <div class="card mb-4" style="max-width: 700px; margin-left: 10px;">
                 <div class="card-header">Oppdragskontroller</div>
                 <div class="card-body d-flex justify-content-around flex-wrap">
                     <button class="btn btn-primary mb-2" id="resume">Fortsett oppdrag</button>
@@ -121,21 +131,26 @@
                     <button class="btn btn-secondary mb-2" id="replan">Replanlegg oppdrag</button>
                 </div>
             </div>
-            <div class="card">
+            
+            <div class="card" style="max-width: 700px; margin-left:10px;">
                 <div class="card-header">Fullførte Oppdrag</div>
                 <div class="card-body p-0">
-                    <table class="table mb-0">
-                        <thead>
-                            <tr>
-                                <th style="color: white;">Oppdragsnavn</th>
-                                <th style="color: white;">Tid Fullført</th>
-                            </tr>
-                        </thead>
-                        <tbody id="completed-missions" style="color: white;">
-                        </tbody>                                    
-                    </table>
+                    <div class="table-responsive">
+                        <table class="table table-dark">
+                            <thead>
+                                <tr>
+                                    <th>Oppdragsnavn</th>
+                                    <th>Tid Fullført</th>
+                                </tr>
+                            </thead>
+                            <tbody id="completed-missions">
+                            </tbody>                                    
+                        </table>
+                    </div>
                 </div>
             </div>
+            
+            
             <div class="col-md-4">
                 <div class="card">
                     <div class="card-header">Robotposisjon</div>
@@ -221,6 +236,54 @@
             }
         });
 
+        socket.on('update_pose', function(msg) {
+            const data = JSON.parse(msg.data);
+            if (data.pose && data.pose.position) {
+                const position = data.pose.position;
+                updateRobotPosition(data.isar_id, data.robot_name, position.x, position.y, position.z);
+            } else {
+                console.error('Pose eller position er undefined', data);
+            }
+        });
+
+        function updateRobotPosition(isarId, robotName, x, y, z) {
+            var map = document.getElementById('map');
+
+            var robotMapElement = document.getElementById(`robot-map-${isarId}`);
+            var robotNameElement = document.getElementById(`robot-name-${isarId}`);
+
+            if (!robotMapElement) {
+                robotMapElement = document.createElement('img');
+                robotMapElement.id = `robot-map-${isarId}`;
+                robotMapElement.src = '/static/robot.png';
+                robotMapElement.style.position = 'absolute';
+                robotMapElement.style.width = '40px';
+                robotMapElement.style.height = '40px';
+                map.appendChild(robotMapElement);
+
+                robotNameElement = document.createElement('div');
+                robotNameElement.id = `robot-name-${isarId}`;
+                robotNameElement.style.position = 'absolute';
+                robotNameElement.style.whiteSpace = 'nowrap';
+                robotNameElement.style.color = 'black';
+                robotNameElement.style.fontSize = '12px';
+                robotNameElement.style.backgroundColor = 'white';
+                robotNameElement.style.padding = '2px 5px';
+                robotNameElement.style.borderRadius = '4px';
+                map.appendChild(robotNameElement);
+            }
+
+            var xPos = (x / 10) * 514;
+            var yPos = (y / 10) * 472;
+
+            robotMapElement.style.left = `${xPos - robotMapElement.width / 2}px`;
+            robotMapElement.style.top = `${yPos - robotMapElement.height / 2}px`;
+
+            robotNameElement.innerHTML = robotName;
+            robotNameElement.style.left = `${xPos - 5}px`;
+            robotNameElement.style.top = `${yPos + 15}px`;
+        }
+
         function updateRobotCard(isarId, infoType, data) {
             let robotCard = document.getElementById(`robot_card_${isarId}`);
             if (!robotCard) {
@@ -238,12 +301,12 @@
             if (infoType === 'status' || infoType === 'battery') {
                 const statusText = translateStatus(data.robot_status, batteryLevel);
                 statusElement.textContent = `Status: ${statusText}`;
-                statusElement.classList.remove('text-success', 'text-danger', 'text-warning');
+                statusElement.classList.remove('text-success', 'text-warning', 'text-warning');
 
                 if (statusText === 'Tilgjengelig') {
                     statusElement.classList.add('text-success');
                 } else if (statusText === 'Opptatt i et oppdrag') {
-                    statusElement.classList.add('text-danger');
+                    statusElement.classList.add('text-warning');
                 } else if (statusText === 'Ikke tilgjengelig (Må lades før oppdrag)') {
                     statusElement.classList.add('text-warning');
                 }
@@ -315,7 +378,7 @@
             if (status === "available" && batteryLevel >= 60) {
                 return "text-success";
             } else if (status === "busy") {
-                return "text-danger";
+                return "text-warning";
             } else if (batteryLevel < 60 && status !== "busy") {
                 return "text-warning";
             } else {
@@ -384,6 +447,13 @@
             tbody.appendChild(tr);
         });
     });
+    function openNav() {
+            document.getElementById("mySidebar").classList.add('show');
+        }
+
+        function closeNav() {
+            document.getElementById("mySidebar").classList.remove('show');
+        }
 </script>
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>

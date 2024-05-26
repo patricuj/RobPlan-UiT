@@ -9,7 +9,21 @@ from ..extensions import db
 @robot_status_bp.route('/robot_status/<isar_id>')
 @login_required
 def robot_status(isar_id):
-    return render_template('/robot_status/robot_status.html', isar_id=isar_id)
+    subquery = db.session.query(
+        RobotInfo.isar_id,
+        func.max(RobotInfo.id).label('latest_id')
+    ).group_by(RobotInfo.isar_id).subquery()
+
+    robot = db.session.query(RobotInfo).join(
+        subquery, RobotInfo.id == subquery.c.latest_id
+    ).filter(RobotInfo.isar_id == isar_id).first()
+
+    if not robot:
+        return "Robot not found", 404
+
+    robot_name = robot.robot_name
+    return render_template('/robot_status/robot_status.html', isar_id=isar_id, robot_name=robot_name)
+
 
 @robot_status_bp.route('/api/robot_info/<isar_id>', methods=['GET'])
 @login_required

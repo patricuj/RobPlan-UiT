@@ -4,8 +4,10 @@ from .. import socketio
 from ..models import RobotInfo
 from sqlalchemy.sql import func
 from ..extensions import db
+from flask_login import login_required
 
 @robot_fleet_bp.route('/robot_fleet')
+@login_required
 def robot_fleet():
     robots = RobotInfo.query.all()
     return render_template('/robot_fleet/robot_fleet.html', robots=robots)
@@ -19,6 +21,7 @@ def handle_disconnect():
     print('Client disconnected')
 
 @robot_fleet_bp.route('/api/robot_info', methods=['GET'])
+@login_required
 def get_latest_robot_info():
     subquery = db.session.query(
         RobotInfo.isar_id,

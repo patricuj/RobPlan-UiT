@@ -4,8 +4,10 @@ from . import missions_bp
 from ..models import Mission, RobotInfo
 from ..extensions import db
 import random
+from flask_login import login_required
 
 @missions_bp.route('/missions')
+@login_required
 def missions():
     update_mission_availability_based_on_battery()
     
@@ -45,11 +47,13 @@ def update_mission_availability_based_on_battery():
 
 
 @missions_bp.route('/update-mission-availability', methods=['POST'])
+@login_required
 def update_mission_availability():
     update_mission_availability_based_on_battery()
     return jsonify({"message": "Mission availability updated based on robot battery levels"}), 200
 
 @missions_bp.route('/start-mission', methods=['POST'])
+@login_required
 def start_mission():
     default_mission_data = request.json
 
@@ -127,6 +131,7 @@ def transform_mission_data(default_mission_data):
 
 
 @missions_bp.route('/add-mission', methods=['POST'])
+@login_required
 def add_mission():
     mission_name = request.form.get('MissionName')
     mission_data = {
@@ -177,6 +182,7 @@ def add_mission():
     return redirect(url_for('missions.missions'))
 
 @missions_bp.route('/delete-mission/<int:mission_id>', methods=['POST'])
+@login_required
 def delete_mission(mission_id):
     mission = Mission.query.get_or_404(mission_id)
     db.session.delete(mission)
@@ -185,6 +191,7 @@ def delete_mission(mission_id):
     return redirect(url_for('missions.missions'))
 
 @missions_bp.route('/edit-mission', methods=['POST'])
+@login_required
 def edit_mission():
     mission_id = request.form.get('MissionId')
     mission_name = request.form.get('MissionName')
@@ -213,12 +220,13 @@ def edit_mission():
     return redirect(url_for('missions.missions'))
 
 @missions_bp.route('/make-all-missions-available', methods=['POST'])
+@login_required
 def make_all_missions_available():
     set_missions_availability(True)
     return jsonify({"message": "Alle oppdrag er nå tilgjengelige"}), 200
 
 @missions_bp.route('/make-all-missions-unavailable', methods=['POST'])
+@login_required
 def make_all_missions_unavailable():
-    print("make_all_missions_unavailable function called")
     set_missions_availability(False)
     return jsonify({"message": "Alle oppdrag er nå utilgjengelige"}), 200

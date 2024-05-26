@@ -1,5 +1,6 @@
 from .extensions import db
 from flask_login import UserMixin
+from datetime import datetime
 
 class User(db.Model, UserMixin):
     __tablename__ = 'Users'
@@ -61,3 +62,4 @@ class RobotInfo(db.Model):
     robot_status = db.Column(db.String(20))
     current_mission_id = db.Column(db.String(50))
     port = db.Column(db.Integer)
+    timestamp = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)

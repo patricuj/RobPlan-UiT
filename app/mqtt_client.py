@@ -138,6 +138,15 @@ class MQTTClient:
                 if port is None:
                     port = latest_robot_info.port
 
+                if robot_status == 'busy' and current_mission_id is None:
+                    last_mission_info = RobotInfo.query.filter(
+                        RobotInfo.isar_id == isar_id,
+                        RobotInfo.robot_name == robot_name,
+                        RobotInfo.current_mission_id != None
+                    ).order_by(RobotInfo.id.desc()).first()
+                    if last_mission_info:
+                        current_mission_id = last_mission_info.current_mission_id
+
             if latest_robot_info:
                 db.session.delete(latest_robot_info)
                 db.session.commit()
@@ -148,7 +157,8 @@ class MQTTClient:
                 battery_level=battery_level,
                 robot_status=robot_status,
                 current_mission_id=current_mission_id,
-                port=port if port is not None else (latest_robot_info.port if latest_robot_info else None)
+                port=port if port is not None else (latest_robot_info.port if latest_robot_info else None),
+                timestamp=datetime.utcnow(),
             )
             db.session.add(new_robot_info)
             db.session.commit()

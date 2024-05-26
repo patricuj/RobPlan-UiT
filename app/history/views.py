@@ -7,9 +7,10 @@ from math import ceil
 from ..models import Result
 from ..extensions import db
 from collections import OrderedDict
-
+from flask_login import login_required
 
 @history_bp.route('/history')
+@login_required
 def history():
     page = request.args.get('page', 1, type=int)
     robot_name = request.args.get('robot_name', '')
@@ -201,6 +202,7 @@ def get_filtered_results_count(robot_name='', from_date='', to_date='', query=''
 
 
 @history_bp.route('/search-history')
+@login_required
 def search_history():
     query = request.args.get('query', '')
     robot_name = request.args.get('robot_name', '')

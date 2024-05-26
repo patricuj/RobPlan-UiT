@@ -13,7 +13,7 @@
             <div class="row mb-4">
                 <div class="col-md-6">
                     <h4>OPPDRAGSDETALJER</h4>
-                    <p><strong>Operatør:</strong> Dennis Mai</p>
+                    <p><strong>Operatør:</strong> {{ report_data.operator }}</p>
                     <p><strong>Robot:</strong> {{ report_data.robot_name }}</p>
                     <p><strong>Status:</strong> {{ report_data.status }}</p>
                     <p><strong>Tidspunkt:</strong> {{ report_data.timestamp }}</p>
@@ -22,6 +22,5 @@
             </div>
         </div>
     </div>
-    <a href="{{ url_for('history.history') }}" class="btn btn-secondary mt-4">Tilbake</a>
 </div>
 {% endblock %}

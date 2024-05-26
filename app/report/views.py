@@ -4,9 +4,10 @@ from flask import render_template, abort
 from . import report_bp
 from datetime import datetime, timedelta
 from ..models import Result
-
+from flask_login import login_required, current_user
 
 @report_bp.route('/report/<int:result_id>')
+@login_required
 def show_report(result_id):
     base_folder = "/home/dennis/isar/results"
     target_json_suffix = f"__Image__{result_id}.json"
@@ -50,12 +51,15 @@ def show_report(result_id):
                 "electric_box_time": electric_box_time.strftime('%Y-%m-%d %H:%M:%S'),
                 "switch_audio_time": switch_audio_time.strftime('%Y-%m-%d %H:%M:%S'),
                 "valve_image_time": valve_image_time.strftime('%Y-%m-%d %H:%M:%S'),
+                "operator": current_user.Username
             }
             return render_template('report/report.html', report_data=report_data, result_id=result_id)
     except FileNotFoundError:
         abort(404)
 
+
 @report_bp.route('/report/failed/<int:result_id>')
+@login_required
 def show_failed_report(result_id):
     result = Result.query.get(result_id)
     if not result:
@@ -67,6 +71,7 @@ def show_failed_report(result_id):
         "robot_name": result.RobotName,
         "status": result.Status,
         "timestamp": result.Timestamp.strftime('%Y-%m-%d %H:%M:%S'),
-        "details": result.Details
+        "details": result.Details,
+        "operator": current_user.Username
     }
     return render_template('report/failed_report.html', report_data=report_data, result_id=result_id)

@@ -12,6 +12,11 @@ from flask_login import login_required
 @history_bp.route('/history')
 @login_required
 def history():
+    """
+    Rute for å vise historikk for inspeksjoner.
+
+    Henter og viser filtrert og paginert inspeksjonsdata basert på forespørselsparametre.
+    """
     page = request.args.get('page', 1, type=int)
     robot_name = request.args.get('robot_name', '')
     sort_order = request.args.get('sort', 'desc')
@@ -21,6 +26,7 @@ def history():
     status_filter = request.args.get('status_filter', 'all')
     per_page = 10
 
+    # Henter inspeksjonsdata basert på filtreringsparametre
     inspection_data = get_inspection_data(
         page=page,
         per_page=per_page,
@@ -32,6 +38,7 @@ def history():
         status_filter=status_filter
     )
 
+    # Beregner totalt antall resultater basert på filtreringsparametre
     total_results = get_filtered_results_count(
         robot_name=robot_name,
         from_date=from_date,
@@ -56,17 +63,32 @@ def history():
 
 
 def format_timestamp(timestamp):
+    """
+    Formaterer et tidsstempel til dato og tid.
+
+    Args:
+        timestamp (str): Tidsstempelet som skal formateres.
+
+    Returns:
+        tuple: Formaterte dato- og tidsstrenger.
+    """
     dt = parse_timestamp(timestamp)
     formatted_date = dt.strftime('%Y-%m-%d')
     formatted_time = dt.strftime('%H:%M:%S')
     return formatted_date, formatted_time
 
 def read_json_file(file_path):
+    """
+    Leser innholdet av en JSON-fil.
+    """
     with open(file_path, 'r') as json_file:
         data = json.load(json_file)
     return data
 
 def extract_result_id(file_name):
+    """
+    Ekstraherer resultat-ID fra filnavn.
+    """
     parts = file_name.split('__Image__')
     if len(parts) > 1:
         number_part = parts[1].split('.')[0]
@@ -74,12 +96,18 @@ def extract_result_id(file_name):
     return "Ukjent"
 
 def list_json_files(directory):
+    """
+    Lister alle JSON-filer i en katalog.
+    """
     for root, dirs, files in os.walk(directory):
         for file in files:
             if file.endswith('.json'):
                 yield os.path.join(root, file)
 
 def parse_timestamp(timestamp):
+    """
+    Parser et tidsstempel til en datetime-objekt.
+    """
     formats = ["%Y-%m-%dT%H:%M:%S.%f", "%Y-%m-%dT%H:%M:%S"]
     for fmt in formats:
         try:
@@ -89,7 +117,11 @@ def parse_timestamp(timestamp):
     raise ValueError(f"time data '{timestamp}' does not match any known format")
 
 
-def get_inspection_data(page=1, per_page=10, sort_order='desc', robot_name='', from_date='', to_date='', query='', status_filter='all', results_dir='/home/dennis/isar/results'):
+def get_inspection_data(page=1, per_page=10, sort_order='desc', robot_name='', from_date='', to_date='', query='', status_filter='all'):
+    """
+    Henter inspeksjonsdata basert på filtreringsparametre og paginering.
+    """
+    results_dir = os.getenv('RESULTS_DIR', '/default/path/to/results')
     inspection_data = []
     
     if status_filter in ['all', 'completed']:
@@ -166,7 +198,11 @@ def get_inspection_data(page=1, per_page=10, sort_order='desc', robot_name='', f
     end_index = start_index + per_page
     return sorted_inspection_data[start_index:end_index]
 
-def get_filtered_results_count(robot_name='', from_date='', to_date='', query='', status_filter='all', results_dir='/home/dennis/isar/results'):
+def get_filtered_results_count(robot_name='', from_date='', to_date='', query='', status_filter='all'):
+    """
+    Henter antall resultater basert på filtreringsparametre.
+    """
+    results_dir = os.getenv('RESULTS_DIR', '/default/path/to/results')
     count = 0
     if status_filter in ['all', 'completed']:
         for json_file in list_json_files(results_dir):
@@ -204,6 +240,9 @@ def get_filtered_results_count(robot_name='', from_date='', to_date='', query=''
 @history_bp.route('/search-history')
 @login_required
 def search_history():
+    """
+    Rute for å søke i historikkdata for inspeksjoner.
+    """
     query = request.args.get('query', '')
     robot_name = request.args.get('robot_name', '')
     sort_order = request.args.get('sort', 'desc')
@@ -221,6 +260,10 @@ def search_history():
 
 @history_bp.route('/delete-report', methods=['DELETE'])
 def delete_report():
+    """
+    Rute for å slette en rapport.
+    Sletter rapport basert på resultat-ID og status.
+    """
     result_id = request.args.get('result_id')
     status = request.args.get('status')
     

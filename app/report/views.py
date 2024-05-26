@@ -9,10 +9,15 @@ from flask_login import login_required, current_user
 @report_bp.route('/report/<int:result_id>')
 @login_required
 def show_report(result_id):
-    base_folder = "/home/dennis/isar/results"
+    """
+    Viser en rapport for et fullført oppdrag.
+
+    """
+    base_folder = os.getenv('RESULTS_DIR', '/default/path/to/results')
     target_json_suffix = f"__Image__{result_id}.json"
     found_json_path = None
 
+    # Går i gjennom mappen for å finne JSON-filen med riktig result_id
     for root, dirs, files in os.walk(base_folder):
         for file in files:
             if file.endswith(target_json_suffix):
@@ -25,6 +30,7 @@ def show_report(result_id):
         abort(404)
 
     try:
+        # Leser JSON-filen og trekker ut nødvendige data
         with open(found_json_path, 'r') as file:
             data = json.load(file)
             timestamp_str = data["data"][0]["files"][0]["timestamp"]
@@ -57,10 +63,12 @@ def show_report(result_id):
     except FileNotFoundError:
         abort(404)
 
-
 @report_bp.route('/report/failed/<int:result_id>')
 @login_required
 def show_failed_report(result_id):
+    """
+    Viser en rapport for et mislykket oppdrag.
+    """
     result = Result.query.get(result_id)
     if not result:
         abort(404)

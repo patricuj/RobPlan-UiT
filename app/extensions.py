@@ -4,6 +4,7 @@ from flask_socketio import SocketIO
 from flask_wtf import CSRFProtect
 from flask_moment import Moment
 
+# Initialiserer Flask-utvidelser
 db = SQLAlchemy()
 login_manager = LoginManager()
 socketio = SocketIO()

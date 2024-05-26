@@ -3,10 +3,24 @@ import json
 from .extensions import db
 from datetime import datetime, timedelta
 from .models import Notification, Result, RobotInfo
-from threading import Timer
 
 class MQTTClient:
+    """
+    MQTT-klient for å håndtere meldinger fra en MQTT-broker og oppdatere
+    databasemodeller samt sende oppdateringer til klienter via SocketIO.
+    """
+
     def __init__(self, host, port, username=None, password=None, socketio=None, app=None):
+        """
+        Initialiserer MQTTClient med nødvendige parametre.
+
+        Args:
+            host (str): Vert for MQTT-broker.
+            port (int): Port for MQTT-broker.
+            username (str, optional): Brukernavn for MQTT-broker. Default er None.
+            password (str, optional): Passord for MQTT-broker. Default er None.
+            socketio (SocketIO, optional): SocketIO-objekt for sanntidskommunikasjon. Default er None.
+        """
         self.client = mqtt.Client(callback_api_version=mqtt.CallbackAPIVersion.VERSION1)
         self.host = host
         self.port = port
@@ -19,6 +33,10 @@ class MQTTClient:
             self.client.username_pw_set(username, password)
 
     def on_connect(self, client, userdata, flags, rc):
+        """
+        Callback-funksjon for tilkobling til MQTT-broker.
+        Abonnerer på topics hos ISAR.
+        """
         print(f"Connected with result code {rc}")
         topics = [
             ("isar/+/robot_heartbeat", 0),
@@ -32,7 +50,12 @@ class MQTTClient:
         for topic in topics:
             self.client.subscribe(topic)
 
+        self.delete_old_robot_info(seconds=60)
+
     def on_message(self, client, userdata, msg):
+        """
+        Callback-funksjon for mottatte meldinger fra MQTT-broker.
+        """
         print(f"Received message on topic {msg.topic}: {msg.payload.decode()}")
         payload = msg.payload.decode()
         topic_parts = msg.topic.split('/')
@@ -58,7 +81,6 @@ class MQTTClient:
                         'battery_level': battery_level,
                         'severity': 'High'
                     })
-                self.set_heartbeat_timer(isar_id)
         elif info_type in ['robot_status', 'mission', 'robot_heartbeat']:
             if info_type == 'robot_heartbeat':
                 self.socketio.emit('update_robot_heartbeat', {
@@ -67,7 +89,6 @@ class MQTTClient:
                     'robot_name': data.get('robot_name', 'Unknown'),
                     'timestamp': data.get('timestamp', None)
                 })
-                self.set_heartbeat_timer(isar_id)
             elif info_type == 'mission':
                 mission_status = data.get('status', None)
                 self.socketio.emit(f'update_{info_type}', {
@@ -105,7 +126,6 @@ class MQTTClient:
                     'status': data.get('status', None),
                     'timestamp': data.get('timestamp', None)
                 })
-                self.set_heartbeat_timer(isar_id)
         elif info_type == 'pose':
             self.socketio.emit('update_pose', {
                 'data': payload,
@@ -125,8 +145,10 @@ class MQTTClient:
                 'timestamp': data.get('timestamp', None)
             })
 
-
     def update_robot_info(self, isar_id, robot_name, battery_level=None, robot_status=None, current_mission_id=None, port=None):
+        """
+        Oppdaterer robotinformasjon i databasen.
+        """
         with self.app.app_context():
             latest_robot_info = RobotInfo.query.filter_by(isar_id=isar_id, robot_name=robot_name).order_by(RobotInfo.id.desc()).first()
             
@@ -163,38 +185,33 @@ class MQTTClient:
             db.session.add(new_robot_info)
             db.session.commit()
 
-
-    def set_heartbeat_timer(self, isar_id):
-        if isar_id in self.status_timers:
-            self.status_timers[isar_id].cancel()
-
-        self.status_timers[isar_id] = Timer(10.0, self.check_heartbeat, [isar_id])
-        self.status_timers[isar_id].start()
-
-    def check_heartbeat(self, isar_id):
+    def delete_old_robot_info(self, seconds=60):
+        """
+        Sletter gamle RobotInfo-oppføringer fra databasen etter en viss tid.
+        """
         with self.app.app_context():
-            latest_robot_info = RobotInfo.query.filter_by(isar_id=isar_id).order_by(RobotInfo.id.desc()).first()
-            if latest_robot_info:
-                last_update = latest_robot_info.timestamp
-                if datetime.utcnow() - last_update > timedelta(minutes=1):
-                    self.delete_robot_info(isar_id)
-
-
-    def delete_robot_info(self, isar_id):
-        with self.app.app_context():
-            RobotInfo.query.filter_by(isar_id=isar_id).delete()
+            threshold_date = datetime.utcnow() - timedelta(seconds=seconds)
+            print(f"Sletter oppføringer eldre enn: {threshold_date}")
+            
+            deleted = RobotInfo.query.filter(RobotInfo.timestamp < threshold_date).delete()
             db.session.commit()
-        self.socketio.emit('remove_robot_card', {'isar_id': isar_id})
+            
+            print(f"Antall slettede oppføringer: {deleted}")
 
 
     def connect(self):
+        """
+        Kobler til MQTT-broker og starter mottak av meldinger.
+        """
         self.client.on_connect = self.on_connect
         self.client.on_message = self.on_message
         self.client.connect(self.host, self.port)
         self.client.loop_start()
 
-
 def create_database_notification(app, data, isar_id):
+    """
+    Oppretter en varsling i databasen for lavt batterinivå.
+    """
     with app.app_context():
         message = f"Batterinivå lavt for robot {data.get('robot_name', 'Ukjent')} med batteriprosent: {data.get('battery_level')}%"
         new_notification = Notification(
@@ -210,6 +227,9 @@ def create_database_notification(app, data, isar_id):
         db.session.commit()
 
 def create_mission_completion_notification(app, mission_id, robot_name):
+    """
+    Oppretter en varsling i databasen når et oppdrag er fullført.
+    """
     with app.app_context():
         message = f"{robot_name} har fullført oppdraget {mission_id}."
         new_notification = Notification(
@@ -225,6 +245,9 @@ def create_mission_completion_notification(app, mission_id, robot_name):
         db.session.commit()
 
 def create_mission_failed_notification(app, mission_id, robot_name, error_description, isar_id):
+    """
+    Oppretter en varsling i databasen når et oppdrag feiler.
+    """
     with app.app_context():
         message = f"{robot_name} mislyktes med oppgaven {mission_id}. {error_description}"
         new_notification = Notification(
@@ -248,3 +271,4 @@ def create_mission_failed_notification(app, mission_id, robot_name, error_descri
         )
         db.session.add(new_result)
         db.session.commit()
+

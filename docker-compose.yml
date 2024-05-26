@@ -1,3 +1,6 @@
+# Docker-compose fil for å sette opp en MariaDB database og phpMyAdmin.
+# Denne konfigurasjonen er hentet fra et tidligere prosjekt med navn QuizMaster16 skrevet av Dennis Mai. Fra faget DTE-2509 Databaser og webapplikasjoner 1, våren 2023.
+
 version: "3"
 services:
   db:

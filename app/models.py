@@ -2,6 +2,11 @@ from .extensions import db
 from flask_login import UserMixin
 from datetime import datetime
 
+# Denne filen definerer databasemodellene for applikasjonen.
+# Modellene er User, Notification, Mission, Result, og RobotInfo, 
+# som representerer forskjellige tabeller i databasen.
+# Hver klasse har spesifikke kolonner og relasjoner definert ved hjelp av SQLAlchemy.
+
 class User(db.Model, UserMixin):
     __tablename__ = 'Users'
     

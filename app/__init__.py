@@ -8,26 +8,37 @@ from .models import Notification
 from flask_login import current_user
 
 def create_app():
+    """
+    Oppretter og konfigurerer Flask-applikasjonen.
+    """
     app = Flask(__name__)
     app.config.from_object(Config)
 
+    # Initialiserer utvidelser med applikasjonen
     db.init_app(app)
     login_manager.init_app(app)
     socketio.init_app(app, cors_allowed_origins="*")
     csrf.init_app(app)
     moment.init_app(app)
 
+    # Aktiverer CORS for alle ruter
     CORS(app, resources={r"/*": {"origins": "*"}})
 
+    # Setter opp innloggingsvisningen
     login_manager.login_view = 'auth.login'
 
     @login_manager.user_loader
     def load_user(user_id):
-        return User.query.get(int(user_id)) 
+        """
+        Laster en bruker fra databasen ved hjelp av bruker-ID.
+        """
+        return User.query.get(int(user_id))
 
+    # Initialiserer og kobler til MQTT-klienten
     mqtt_client = MQTTClient('localhost', 1883, 'isar', None, socketio, app)
     mqtt_client.connect()
-    
+
+    # Registrerer blueprint for ulike moduler
     from .main import main as main_blueprint
     app.register_blueprint(main_blueprint)
 
@@ -57,6 +68,12 @@ def create_app():
 
     @app.context_processor
     def inject_unread_count():
+        """
+        Injiserer antall uleste notifikasjoner i konteksten.
+
+        Returns:
+            dict: En ordbok med antall uleste notifikasjoner.
+        """
         if current_user.is_authenticated:
             unread_count = Notification.query.filter_by(
                 Users_idUser=current_user.idUser, IsRead=False

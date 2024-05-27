@@ -144,9 +144,9 @@ Husk å skru av Encryption (tls).
 
 ## Oppsett av selvsignert SSL-sertifikat for lokal utvikling
 
-### Linux
+Før du kjører applikasjonen, må du opprette et SSL-sertifikat for å kunne kjøre serveren over HTTPS.
 
-Før du kjører applikasjonen, må du opprette et SSL-sertifikat for å kunne kjøre serveren over HTTPS:
+### Linux
 
 1. Installer OpenSSL med kommandoen 
 ```
@@ -201,9 +201,9 @@ Nå som alt er konfigurert, kan vi kjøre ISAR og ROBPLAN INSIGHT.
    ```
    python main.py
    ```
-   Dette vil starte ISDAR og opprette en isar-robot med navnet "Placebot"
+   Dette vil starte ISAR og opprette en isar-robot med navnet "Placebot"
 
-#### Legge til flere robter
+#### Legge til flere roboter
 Hvis du ønsker å legge til flere roboter, må du endre [settings.py](https://github.com/equinor/isar/blob/main/src/isar/config/settings.py) i ISAR.
 1. Sett en ny `API_PORT`:
    
@@ -211,13 +211,13 @@ Hvis du ønsker å legge til flere roboter, må du endre [settings.py](https://g
    ```
    API_PORT: int = Field(default=3001)
    ```
-2. Sett et nytt ROBOT_NAME:
+2. Sett et nytt `ROBOT_NAME`:
    
    På linje 184, sett et nytt navn for roboten.
    ```
    ROBOT_NAME: str = Field(default="Placebot 2")
    ```
-3. Sett en ny ISAR_ID:
+3. Sett en ny `ISAR_ID`:
    
    På linje 187, sett en ny unik ID for ISAR-instansen.
    ```
@@ -232,7 +232,7 @@ Hvis du ønsker å legge til flere roboter, må du endre [settings.py](https://g
   ```
 Du kan nå åpne dashboardet i en nettleser gjennom https://127.0.0.1:5000/
 
-Merk:
+**Merk:**
 Når du prøver å få tilgang til applikasjonen via HTTPS, kan du få en advarsel som sier:
 
 "Your connection is not private
@@ -242,9 +242,9 @@ Dette er normalt når man bruker et selvsignert sertifikat. For å fortsette til
 
 Du kan nå logge inn og begynne!
 
-Brukernavn: testbruker
+**Brukernavn:** testbruker
 
-Passord: test
+**Passord:** test
 
 
 ## Mediakrediteringer

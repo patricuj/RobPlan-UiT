@@ -246,6 +246,56 @@ Du kan nå logge inn og begynne!
 
 **Passord:** test
 
+## Oversikt over dashboardet
+Etter innlogging kommer du til hoveddashboardet.
+
+Dashboardet viser følgende:
+
+- **Aktive Oppdrag**: Viser alle pågående oppdrag med detaljer som oppdragets navn, og robot som utfører oppdraget.
+- **Kalender**: Inneholder viktige datoer for kommende og fullførte oppdrag.
+- **Anleggsoversikt**: En visuell representasjon av anlegget hvor robotene opererer i, som hjelper operatøren å forstå hvor hver robot befinner seg.
+
+### Flåteoversikt
+Flåteoversikten gir detaljert informasjon om alle roboter i flåten. Dette inkluderer:
+
+- **Batterinivå**: Viser nåværende batterinivå for hver robot.
+- **Nåværende Oppdrag**: Informasjon om hvilke oppdrag hver robot utfører.
+- **Siste Signal**: Tidspunktet for siste kommunikasjon fra roboten.
+
+Hver robot har sin egen side, som nås ved å trykke på **Detaljer**-knappen på en robot. På denne siden kan man pause, fortsette, stoppe og replanlegge oppdrag.
+
+### Oppdragshåndtering
+På oppdragssiden kan du starte et oppdrag så lenge **Start oppdrag**-knappen er grønn. Hvis knappen er gul, betyr det at det ikke finnes noen ledige roboter til å utføre oppdraget. Oppdragssiden lar også brukeren:
+
+- **Legge til Nye Oppdrag**: Opprette og tildele nye oppdrag til tilgjengelige roboter.
+- **Slette Oppdrag**: Fjerne oppdrag som ikke lenger er nødvendige.
+- **Schedule oppdrag**: Lar operatøren velge en tid oppdraget skal starte.
+
+### Historikk
+Historikksiden gir en oversikt over alle fullførte oppdrag. For hvert oppdrag vises:
+
+- **Oppdragsnavn**: Navnet på oppdraget.
+- **Robotnavn**: Hvilken robot som utførte oppdraget.
+- **Status**: Om oppdraget ble fullført eller mislyktes.
+- **Tid Fullført**: Når oppdraget ble ferdigstilt.
+
+Hvert oppdrag har en rapport, som operatøren kan se på.
+
+### Rapporter
+Rapportsiden genererer detaljerte rapporter for hvert fullførte oppdrag. Rapportene inkluderer:
+
+- **Inspeksjonsresultater**: Data samlet inn under oppdraget.
+- **Bilder**: Bilde fra robotens kamera.
+- **Lydopptak**: Eventuelle relevante lydopptak gjort av roboten.
+
+
+### Notifikasjoner
+Sanntidsnotifikasjoner gir varsler om viktige hendelser som kan kreve operatørens oppmerksomhet:
+
+- **Lavt Batterinivå**: Varsler når en robots batterinivå er lavt.
+- **Mislykkede Oppdrag**: Informerer operatøren om oppdrag som ikke ble fullført.
+- **Fullførte Oppdrag**: Bekreftelse når et oppdrag er fullført.
+
 
 ## Mediakrediteringer
 
